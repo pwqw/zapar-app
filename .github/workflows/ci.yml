@@ -58,7 +58,6 @@ jobs:
           channel: 'stable'
           cache: true
           pub-cache-key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          pub-cache-path: ${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:
 
       # =================================================================
       # OPTIMIZACIÓN 4: Skip pub get si cache hit
