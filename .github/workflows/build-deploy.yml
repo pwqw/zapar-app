@@ -403,9 +403,8 @@ jobs:
       # =================================================================
 
       - name: Deploy to Google Play Store
-        if: |
-          (github.event.inputs.deploy_to_playstore == 'true' || startsWith(github.ref, 'refs/tags/v')) &&
-          secrets.GOOGLE_PLAY_SERVICE_ACCOUNT != ''
+        if: github.event.inputs.deploy_to_playstore == 'true' || startsWith(github.ref, 'refs/tags/v')
+        continue-on-error: true
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
