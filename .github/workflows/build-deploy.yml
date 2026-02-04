@@ -1,4 +1,4 @@
-name: Production Release Build
+name: Build & Deploy
 
 on:
   workflow_dispatch:
@@ -8,6 +8,21 @@ on:
         required: false
         type: boolean
         default: false
+      deploy_to_playstore:
+        description: 'Deploy to Google Play Store'
+        required: false
+        type: boolean
+        default: false
+      track:
+        description: 'Play Store track (internal/alpha/beta/production)'
+        required: false
+        type: choice
+        default: 'internal'
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
   push:
     tags:
       - 'v*'
@@ -16,8 +31,8 @@ env:
   BASE_VERSION_CODE: 100
 
 jobs:
-  build-android-release:
-    name: Build Android Release
+  build-android:
+    name: Build Android
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: PlayStore
@@ -171,14 +186,6 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "🔢 Version code: $VERSION_CODE"
 
-          # Note: build.gradle will multiply this by 10 and add ABI code
-          # Example: versionCode=145
-          #   - Universal APK: 1450
-          #   - armeabi-v7a: 1451
-          #   - arm64-v8a: 1452
-          #   - x86: 1453
-          #   - x86_64: 1454
-
       - name: Create local.properties with version
         run: |
           cat > android/local.properties << EOF
@@ -257,13 +264,13 @@ jobs:
           done
 
       # =================================================================
-      # FASE 5: PUBLICACIÓN
+      # FASE 5: ARTIFACTS
       # =================================================================
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-apks-${{ steps.version.outputs.VERSION_NAME }}
+          name: apks-${{ steps.version.outputs.VERSION_NAME }}
           path: build/app/outputs/flutter-apk/*.apk
           retention-days: 30
           if-no-files-found: error
@@ -271,10 +278,14 @@ jobs:
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab-${{ steps.version.outputs.VERSION_NAME }}
+          name: aab-${{ steps.version.outputs.VERSION_NAME }}
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
           if-no-files-found: error
+
+      # =================================================================
+      # FASE 6: GITHUB RELEASE (solo para tags)
+      # =================================================================
 
       - name: Prepare release assets
         if: startsWith(github.ref, 'refs/tags/v')
@@ -347,6 +358,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # =================================================================
+      # FASE 7: DEPLOY A PLAY STORE (opcional)
+      # =================================================================
+
+      - name: Deploy to Google Play Store
+        if: |
+          (github.event.inputs.deploy_to_playstore == 'true' || startsWith(github.ref, 'refs/tags/v')) &&
+          secrets.GOOGLE_PLAY_SERVICE_ACCOUNT != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: phanan.koel.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.track || 'internal' }}
+          status: completed
+          inAppUpdatePriority: 3
+
+      # =================================================================
+      # FASE 8: BUILD SUMMARY
+      # =================================================================
+
       - name: Build summary
         if: always()
         run: |
@@ -380,8 +412,8 @@ jobs:
             echo "- ❌ Google Play Bundle: Missing" >> $GITHUB_STEP_SUMMARY
           fi
 
-  build-ios-release:
-    name: Build iOS Release
+  build-ios:
+    name: Build iOS
     runs-on: macos-latest
     timeout-minutes: 60
     if: github.event.inputs.build_ios == 'true'

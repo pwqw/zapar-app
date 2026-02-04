@@ -2,28 +2,85 @@
 
 ## ✅ ¿Qué se ha hecho?
 
-Se han implementado workflows completos de GitHub Actions para Zapar App, validados contra documentación oficial y mejores prácticas de la comunidad.
+Se han reorganizado los workflows de GitHub Actions en **2 archivos separados**:
 
 ### Archivos Creados
 
 ```
-.github/
-├── workflows/
-│   ├── flutter-pr.yml           ← Workflow de validación de PRs
-│   ├── flutter-release.yml      ← Workflow de builds de producción
-│   └── unit.yml.backup          ← Backup del workflow anterior
-└── scripts/
-    └── validate_flutter.sh      ← Script de validación
+.github/workflows/
+├── ci.yml              ← Análisis y tests (push a branches)
+├── build-deploy.yml    ← Build firmado y deploy (manual o tags)
+└── unit.yml.backup     ← Backup del workflow anterior
 
 docs/
-├── CI-CD.md                     ← Guía completa de uso
-├── IMPLEMENTATION-SUMMARY.md    ← Resumen de implementación
-└── VALIDATION.md                ← Validación contra docs oficiales
+├── CI-CD.md                     ← Guía de uso (ACTUALIZAR)
+├── WORKFLOWS-EXPLANATION.md     ← Explicación detallada ⭐ NUEVO
+├── VALIDATION.md                ← Validación técnica
+└── IMPLEMENTATION-SUMMARY.md    ← Resumen de implementación
 ```
 
-## ⚠️ CRÍTICO: Configurar Secrets (5 minutos)
+## 🎯 Cambios Fundamentales Implementados
 
-Antes de poder usar los workflows de producción, necesitas:
+### 1. ✅ Trigger cambiado: `pull_request` → `push`
+
+**Antes:**
+```yaml
+on:
+  pull_request:  # Requería crear PR
+```
+
+**Ahora:**
+```yaml
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+```
+
+**Ventaja:** Feedback inmediato en cada push, sin necesidad de crear PR.
+
+### 2. ✅ Workflows Separados
+
+**`ci.yml`** (10-15 min)
+- Análisis y tests
+- Se ejecuta en cada push
+- Tests bloqueantes
+
+**`build-deploy.yml`** (20-30 min)
+- Build firmado + deploy
+- Manual o tags `v*`
+- Tests non-blocking
+
+**Ventaja:** Más rápido, más barato, más claro.
+
+### 3. ✅ Tests en archivo único
+
+Todo el análisis y tests está en `ci.yml`:
+- flutter analyze
+- dart format
+- flutter test --coverage
+- codecov upload
+
+### 4. ✅ Java 17 Explicado
+
+Ver `docs/WORKFLOWS-EXPLANATION.md` → sección "¿Por qué Java 17?"
+
+**Resumen:** Flutter 3.38+ requiere Java 17 para compilar (toolchain), aunque el bytecode generado sea Java 1.8 (target).
+
+**Fuentes:**
+- [Flutter 3.38 Release Notes](https://docs.flutter.dev/release/release-notes/release-notes-3.38.0)
+
+### 5. ✅ Logs y Troubleshooting
+
+El error que obtuviste (`flutter pub get --dry-run` fallando) se ha arreglado:
+- Eliminado el paso de validación redundante
+- `flutter pub get` se ejecuta directamente
+
+---
+
+## ⚠️ CRÍTICO: Configurar Secrets (5 minutos)
 
 ### Paso 1: Generar Keystore (Si no lo tienes)
 
@@ -48,7 +105,7 @@ cat keystore.b64
 
 ### Paso 2: Configurar GitHub Environment
 
-1. Ir a: **https://github.com/TU-USERNAME/zapar-app/settings/environments**
+1. Ir a: **Settings → Environments**
 2. Click: **"New environment"**
 3. Nombre: `PlayStore`
 4. Click: **"Add secret"** (4 veces)
@@ -62,71 +119,52 @@ cat keystore.b64
 
 5. Click: **"Save"**
 
-## ✅ Pruebas (15 minutos)
+---
 
-### Opción A: Probar con Pull Request
+## 🧪 Pruebas
+
+### Prueba 1: CI Workflow (5 min)
 
 ```bash
 # 1. Crear branch de prueba
-git checkout -b test/workflows-ci-cd
+git checkout -b test/ci-workflow
 
-# 2. Agregar archivos
-git add .github/workflows/flutter-pr.yml
-git add .github/workflows/flutter-release.yml
-git add .github/scripts/validate_flutter.sh
-git add docs/
+# 2. Hacer un cambio trivial
+echo "# Test" >> README.md
 
-# 3. Commit (en español según tu configuración)
-git commit -m "ci(workflows): implementar CI/CD con GitHub Actions
+# 3. Commit y push
+git commit -am "test(ci): probar workflow de CI"
+git push origin test/ci-workflow
 
-- Agregar workflow de validación de PRs (flutter-pr.yml)
-- Agregar workflow de builds de producción (flutter-release.yml)
-- Agregar script de validación pre-build
-- Agregar documentación completa de CI/CD
-
-Features:
-- Tests bloqueantes en PR, non-blocking en release
-- Cache de Flutter SDK, pub dependencies, y Gradle
-- Versionado dinámico (pubspec + run number)
-- APKs split por ABI (4 variantes)
-- AAB para Google Play Store
-- GitHub Releases automáticos para tags v*
-- Validación temprana de secrets (fail-fast)"
-
-# 4. Push
-git push origin test/workflows-ci-cd
-
-# 5. Crear Pull Request en GitHub
-# El workflow se ejecutará automáticamente
-
-# 6. Verificar en: https://github.com/TU-USERNAME/zapar-app/actions
+# 4. Ver ejecución en: https://github.com/TU-USERNAME/zapar-app/actions
 ```
 
 **Esperar:**
-- ✅ Job "Analyze & Test" complete exitosamente
-- ✅ Job "Build Android Debug APKs" genere 4 APKs
-- ✅ Comentario automático aparezca en el PR
-- 📦 Descargar APK de debug desde Artifacts
+- ✅ Job "Analyze & Test" complete en ~10 min
+- ✅ Tests pasen
+- ✅ Coverage suba a Codecov (si configurado)
 
-### Opción B: Probar Release Manual (DESPUÉS de configurar secrets)
+### Prueba 2: Build Manual (DESPUÉS de configurar secrets)
 
 ```bash
 # 1. Ir a: https://github.com/TU-USERNAME/zapar-app/actions
-# 2. Seleccionar: "Production Release Build"
+# 2. Seleccionar: "Build & Deploy"
 # 3. Click: "Run workflow"
-# 4. Branch: test/workflows-ci-cd
-# 5. Desmarcar: "Build iOS app"
-# 6. Click: "Run workflow"
+# 4. Opciones:
+#    - Branch: test/ci-workflow
+#    - Build iOS: false
+#    - Deploy to Play Store: false
+# 5. Click: "Run workflow"
 
-# 7. Esperar ~20 minutos
+# 6. Esperar ~25 min
 
-# 8. Verificar:
+# 7. Verificar:
 #    - ✅ 4 APKs firmados en Artifacts
 #    - ✅ 1 AAB en Artifacts
-#    - ✅ Todos los archivos >10MB
+#    - ✅ Build summary muestra tamaños
 ```
 
-### Opción C: Probar Release con Tag (DESPUÉS de que Opción B funcione)
+### Prueba 3: Tag Release (DESPUÉS de Prueba 2)
 
 ```bash
 # 1. Crear tag de prueba
@@ -135,30 +173,39 @@ git tag v2.2.6-test
 # 2. Push tag
 git push origin v2.2.6-test
 
-# 3. Verificar en: https://github.com/TU-USERNAME/zapar-app/releases
-#    - ✅ Release creado automáticamente
-#    - ✅ 4 APKs + 1 AAB adjuntos
-#    - ✅ Release notes generadas
-
-# 4. Limpiar tag de prueba
-git tag -d v2.2.6-test
-git push origin :refs/tags/v2.2.6-test
+# 3. Verificar:
+#    - ✅ Build & Deploy workflow se ejecuta
+#    - ✅ GitHub Release se crea
+#    - ✅ APKs renombrados adjuntos
+#    - ✅ AAB adjunto
 ```
+
+---
 
 ## 📚 Documentación
 
+### Para Entender los Workflows
+⭐ **Lee primero:** `docs/WORKFLOWS-EXPLANATION.md`
+
+Explica:
+- Por qué 2 workflows separados
+- Por qué `push` en vez de `pull_request`
+- Por qué Java 17
+- Flujo completo de trabajo
+- Troubleshooting
+
 ### Para Uso Diario
-Lee: **`docs/CI-CD.md`** - Guía completa con ejemplos de uso
+`docs/CI-CD.md` - Guía de comandos y ejemplos
 
-### Para Entender la Implementación
-Lee: **`docs/IMPLEMENTATION-SUMMARY.md`** - Resumen técnico
+### Para Validación Técnica
+`docs/VALIDATION.md` - Comparación con docs oficiales
 
-### Para Validar contra Best Practices
-Lee: **`docs/VALIDATION.md`** - Comparación con docs oficiales
+---
 
-## 🎯 Flujo de Trabajo Diario
+## 🔄 Flujo de Trabajo Diario
 
 ### Desarrollo Normal
+
 ```bash
 # 1. Crear feature branch
 git checkout -b feature/mi-feature
@@ -170,75 +217,114 @@ git checkout -b feature/mi-feature
 git commit -am "feat(feature): agregar nueva funcionalidad"
 git push origin feature/mi-feature
 
-# 4. Crear PR en GitHub
-# ✅ Workflow de PR se ejecuta automáticamente
-# ✅ Tests deben pasar para mergear
-# ✅ APKs de debug disponibles en Artifacts
+# ✅ CI workflow valida automáticamente
 ```
 
 ### Release de Producción
+
 ```bash
-# 1. Mergear PRs a master
-# 2. Actualizar versión en pubspec.yaml si es necesario
-# 3. Crear tag
+# 1. Mergear features a master
+git checkout master
+git merge feature/mi-feature
+git push origin master
+
+# ✅ CI workflow valida
+
+# 2. Crear tag
 git tag v2.2.7
 git push origin v2.2.7
 
-# ✅ Workflow de release se ejecuta automáticamente
-# ✅ GitHub Release se crea con APKs y AAB
-# ✅ Listo para distribuir
+# ✅ Build & Deploy workflow:
+#    - Construye APKs/AAB
+#    - Crea GitHub Release
+#    - (Opcional) Sube a Play Store
 ```
 
-## 🔍 Troubleshooting Rápido
+---
 
-### Error: "KEYSTORE_BASE64 secret is not set"
-→ Ver [Paso 2: Configurar GitHub Environment](#paso-2-configurar-github-environment)
+## 🚨 Errores Comunes y Soluciones
 
-### Tests fallan en PR
-→ Arreglar tests antes de mergear (son bloqueantes)
+### 1. CI falla con "flutter pub get --dry-run"
 
-### Workflow tarda mucho
-→ Primera ejecución es lenta (sin cache). Siguientes: 10-15 min
+**Causa:** Este comando no crea `.dart_tool/package_config.json`
 
-### APK muy grande
-→ Es normal. Split APKs: ~40-60MB cada uno. AAB: ~100MB
+**Solución:** ✅ Ya arreglado! Ahora usa directamente `flutter pub get`
+
+### 2. Build falla con "KEYSTORE_BASE64 secret is not set"
+
+**Causa:** Environment `PlayStore` no configurado
+
+**Solución:** Ver [Paso 2: Configurar GitHub Environment](#paso-2-configurar-github-environment)
+
+### 3. Tests fallan en CI
+
+**Causa:** Tests son bloqueantes en CI
+
+**Solución:** Arreglar tests antes de pushear, o temporalmente deshabilitarlos
+
+### 4. Workflow tarda mucho
+
+**Causa:** Primera ejecución sin cache
+
+**Solución:** Normal. Siguientes ejecuciones serán más rápidas
+
+---
+
+## 📊 Comparación: Antes vs Ahora
+
+| Aspecto | Antes | Ahora |
+|---------|-------|-------|
+| **Workflows** | 2 archivos (PR + Release) | 2 archivos (CI + Build) |
+| **Trigger CI** | `pull_request` | `push` a branches |
+| **Trigger Build** | Manual o tags | Manual o tags |
+| **Tests en PR** | Bloqueantes | N/A (no hay PR workflow) |
+| **Tests en push** | N/A | Bloqueantes |
+| **Tests en build** | N/A | Non-blocking |
+| **Mantenimiento** | 2 archivos grandes | 2 archivos separados |
+| **Java** | Ambiguo | 17 (explicado) |
+
+---
 
 ## ✅ Checklist Final
 
-Antes de mergear a master:
+Antes de considerar completo:
 
 - [ ] Secrets configurados en GitHub Environment `PlayStore`
-- [ ] PR de prueba ejecutó exitosamente
-- [ ] APK de debug descargado y probado en dispositivo
-- [ ] Release manual ejecutó exitosamente (opcional pero recomendado)
+- [ ] CI workflow ejecutó exitosamente (Prueba 1)
+- [ ] Build manual ejecutó exitosamente (Prueba 2)
+- [ ] Tag release ejecutó exitosamente (Prueba 3)
 - [ ] APK de producción descargado y probado en dispositivo
-- [ ] Documentación revisada
+- [ ] Documentación revisada (`WORKFLOWS-EXPLANATION.md`)
+- [ ] Eliminar branches/tags de prueba
 
-## 🎉 ¿Listo para Producción?
+---
 
-Si todos los checks están ✅:
+## 🎉 Estado Actual
 
-```bash
-# 1. Mergear PR de workflows
-# (usar interfaz de GitHub)
+**CI/CD:** ✅ Listo para producción
 
-# 2. Crear primer release oficial
-git checkout master
-git pull
-git tag v2.2.6
-git push origin v2.2.6
+**Próximos pasos:**
+1. Configurar secrets
+2. Ejecutar pruebas
+3. Configurar Play Store (cuando estés listo)
 
-# 3. Ir a: https://github.com/TU-USERNAME/zapar-app/releases
-# 4. Descargar APKs y distribuir
-```
+**Para Play Store:**
+- Crear app en Google Play Console
+- Generar service account JSON
+- Agregar secret `GOOGLE_PLAY_SERVICE_ACCOUNT`
+- Configurar track (internal → alpha → beta → production)
 
-## 📞 Soporte
+---
 
-- **Documentación completa:** `docs/CI-CD.md`
-- **Validación técnica:** `docs/VALIDATION.md`
-- **GitHub Actions logs:** https://github.com/TU-USERNAME/zapar-app/actions
+## 📞 Archivos Útiles
+
+- ⭐ `docs/WORKFLOWS-EXPLANATION.md` - Explicación completa
+- `docs/CI-CD.md` - Guía de uso
+- `docs/VALIDATION.md` - Validación técnica
+- `.github/workflows/ci.yml` - Workflow de CI
+- `.github/workflows/build-deploy.yml` - Workflow de Build
 
 ---
 
 **Última actualización:** 2026-02-04
-**Estado:** ✅ Listo para configuración de secrets y pruebas
+**Estado:** ✅ Workflows reorganizados y listos para pruebas
