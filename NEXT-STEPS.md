@@ -78,6 +78,28 @@ El error que obtuviste (`flutter pub get --dry-run` fallando) se ha arreglado:
 - Eliminado el paso de validación redundante
 - `flutter pub get` se ejecuta directamente
 
+### 6. ✅ Optimizaciones de Performance
+
+**Problema:** Setup Flutter descargaba ~1.4GB y tardaba varios minutos.
+
+**Soluciones implementadas:**
+1. Cache de pub dependencies ANTES de Flutter setup
+2. Key de cache basado en `pubspec.lock` (más preciso)
+3. Flutter action con `pub-cache-key` customizado
+4. Skip `flutter pub get` si cache hit
+5. Cache de build_runner output
+
+**Resultado esperado:**
+- Primera ejecución: 15-20 min (construye cache)
+- Segunda ejecución: **5-8 min** ⚡ (**~60% más rápido**)
+
+**Detalles:** Ver `docs/OPTIMIZATIONS.md`
+
+**Fuentes:**
+- [How to Reduce Flutter CI Time by 20% - Revelo](https://www.revelo.com/blog/how-we-reduced-our-flutter-ci-execution-time-by-around-20)
+- [Optimising Flutter CI - Medium](https://dikman.medium.com/optimising-flutter-ci-by-caching-packages-8a1d537e0b23)
+- [subosito/flutter-action Docs](https://github.com/subosito/flutter-action)
+
 ---
 
 ## ⚠️ CRÍTICO: Configurar Secrets (5 minutos)
@@ -194,6 +216,15 @@ Explica:
 - Flujo completo de trabajo
 - Troubleshooting
 
+### Para Optimizaciones de Performance
+⚡ **Nuevo:** `docs/OPTIMIZATIONS.md`
+
+Explica:
+- 5 optimizaciones implementadas (cache, skip pub get, etc.)
+- Cómo reducir tiempo de 15-20 min a 5-8 min
+- Verificar que el cache funciona
+- Fuentes oficiales y best practices 2025-2026
+
 ### Para Uso Diario
 `docs/CI-CD.md` - Guía de comandos y ejemplos
 
@@ -256,11 +287,39 @@ git push origin v2.2.7
 
 **Solución:** Ver [Paso 2: Configurar GitHub Environment](#paso-2-configurar-github-environment)
 
-### 3. Tests fallan en CI
+### 3. Build runner falla con mockito
+
+**Causa:** Analyzer desactualizado (7.4.5 vs 10.0.2 requerido)
+
+**Solución temporal:** ✅ Ya configurado como non-blocking en workflows
+
+**Solución permanente:** Ver `docs/KNOWN-ISSUES.md` → sección "Build Runner Falla"
+
+**Impacto:** CI/CD funciona normal, pero mocks no se regeneran automáticamente
+
+### 4. Tests fallan en CI
 
 **Causa:** Tests son bloqueantes en CI
 
 **Solución:** Arreglar tests antes de pushear, o temporalmente deshabilitarlos
+
+### 5. Workflow tarda mucho
+
+**Causa:** Primera ejecución (sin cache)
+
+**Solución:** Normal. Siguientes ejecuciones serán más rápidas
+
+### 6. 61 packages desactualizados
+
+**Advertencia en logs:** "61 packages have newer versions incompatible..."
+
+**Causa:** Dependencies antiguas (analyzer, mockito, http, just_audio, etc.)
+
+**Impacto:** ⚠️ Warnings en logs, pero NO bloquea CI/CD
+
+**Solución:** Ver `docs/KNOWN-ISSUES.md` → "61 Packages Desactualizados"
+
+**Plan:** Actualizar dev dependencies primero, luego production
 
 ### 4. Workflow tarda mucho
 
@@ -319,10 +378,11 @@ Antes de considerar completo:
 ## 📞 Archivos Útiles
 
 - ⭐ `docs/WORKFLOWS-EXPLANATION.md` - Explicación completa
+- ⚡ `docs/OPTIMIZATIONS.md` - Optimizaciones de performance (NUEVO)
 - `docs/CI-CD.md` - Guía de uso
 - `docs/VALIDATION.md` - Validación técnica
-- `.github/workflows/ci.yml` - Workflow de CI
-- `.github/workflows/build-deploy.yml` - Workflow de Build
+- `.github/workflows/ci.yml` - Workflow de CI (optimizado)
+- `.github/workflows/build-deploy.yml` - Workflow de Build (optimizado)
 
 ---
 

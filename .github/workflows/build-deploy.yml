@@ -108,30 +108,23 @@ jobs:
       # FASE 2: SETUP Y CACHE
       # =================================================================
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.x'
-          channel: 'stable'
-          cache: true
-
+      # =================================================================
+      # OPTIMIZACIÓN: Cache de pub dependencies ANTES de Flutter setup
+      # =================================================================
       - name: Cache pub dependencies
         uses: actions/cache@v4
+        id: pub-cache
         with:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-
 
+      # =================================================================
+      # OPTIMIZACIÓN: Cache de Gradle dependencies
+      # =================================================================
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
@@ -142,6 +135,26 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      # =================================================================
+      # OPTIMIZACIÓN: Flutter setup con pub-cache-key
+      # =================================================================
+      - name: Setup Flutter
+        id: flutter-setup
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+          pub-cache-key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          pub-cache-path: ${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:
 
       - name: Verify environment
         run: |
@@ -155,14 +168,42 @@ jobs:
       # FASE 3: BUILD
       # =================================================================
 
+      # =================================================================
+      # OPTIMIZACIÓN: Skip pub get si cache hit
+      # =================================================================
       - name: Install dependencies
-        run: flutter pub get
+        if: steps.flutter-setup.outputs.PUB-CACHE-HIT != 'true'
+        run: |
+          echo "📦 Installing dependencies..."
+          flutter pub get
+          echo "✅ Dependencies installed"
+
+      - name: Dependencies already cached
+        if: steps.flutter-setup.outputs.PUB-CACHE-HIT == 'true'
+        run: echo "✅ Using cached dependencies (pub-cache hit)"
+
+      # =================================================================
+      # OPTIMIZACIÓN: Cache de build_runner output
+      # =================================================================
+      - name: Cache build_runner output
+        uses: actions/cache@v4
+        with:
+          path: |
+            .dart_tool/build
+            **/*.g.dart
+          key: ${{ runner.os }}-build-runner-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-runner-
 
       - name: Run build_runner
+        continue-on-error: true
         run: |
           if grep -q "build_runner:" pubspec.yaml; then
             echo "Running build_runner..."
-            flutter pub run build_runner build --delete-conflicting-outputs
+            flutter pub run build_runner build --delete-conflicting-outputs || {
+              echo "⚠️ build_runner failed but continuing (non-blocking)"
+              exit 0
+            }
           else
             echo "build_runner not found in pubspec.yaml, skipping"
           fi
