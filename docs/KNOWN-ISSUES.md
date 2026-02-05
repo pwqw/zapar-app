@@ -1,23 +1,40 @@
-# Issues Conocidos - CI/CD
+# Issues Conocidos
 
-## 1. Build Runner Falla por Mockito Desactualizado
+## 1. golden_toolkit Discontinuado
 
-### Síntoma
+**Problema:** Tests no compilan (Flutter 3.38.9 incompatible)
+
+**Archivos afectados:**
 ```
-[SEVERE] mockito:mockBuilder on test/ui/widgets/simple_song_list_test.dart:
-Invalid @GenerateMocks annotation: The GenerateMocks "classes" argument is missing,
-includes an unknown type, or includes an extension
-
-Failed after 22.7s
+test/utils/lrc_parser_test.dart
+test/ui/screens/create_playlist_sheet_test.dart
+test/ui/widgets/message_overlay_test.dart
+test/ui/widgets/oops_box_test.dart
 ```
 
-### Causa Raíz
+**Estado:** Tests configurados como `non-blocking` en CI
 
-**Analyzer desactualizado:**
-- Versión actual: `7.4.5`
-- Versión requerida: `10.0.2`
-- SDK language version: `3.10.0`
-- Analyzer language version: `3.9.0`
+**Solución URGENTE:**
+```bash
+# 1. Remover de pubspec.yaml
+# golden_toolkit: ^0.12.0
+
+# 2. Identificar usos
+grep -r "golden_toolkit" test/
+
+# 3. Reescribir con flutter_test
+
+# 4. Verificar
+flutter test
+
+# 5. Habilitar tests blocking en workflows
+```
+
+---
+
+## 2. build_runner Falla (Mockito Desactualizado)
+
+**Problema:** Analyzer 7.4.5 vs requerido 10.0.2
 
 **Archivos afectados:**
 ```
@@ -27,212 +44,52 @@ test/ui/widgets/song_card_test.dart
 test/ui/widgets/song_list_buttons_test.dart
 ```
 
-### Estado Actual en CI/CD
+**Estado:** `build_runner` configurado como `non-blocking`
 
-**Solución temporal:** `build_runner` configurado como **non-blocking**
-
-```yaml
-- name: Run build_runner
-  continue-on-error: true  ← No bloquea el workflow
-  run: |
-    flutter pub run build_runner build --delete-conflicting-outputs || {
-      echo "⚠️ build_runner failed but continuing"
-      exit 0
-    }
-```
-
-**Impacto:**
-- ✅ CI/CD continúa funcionando
-- ⚠️ Archivos `.g.dart` de mocks NO se regeneran
-- ⚠️ Si cambias los mocks, debes generarlos localmente
-
-### Solución Permanente (TODO)
-
-#### Opción A: Actualizar Analyzer (Recomendado)
-
+**Solución:**
 ```yaml
 # pubspec.yaml
 dev_dependencies:
-  analyzer: ^10.0.2  # Agregar versión específica
-  mockito: ^5.6.3    # Actualizar a última versión
+  analyzer: ^10.0.2
+  mockito: ^5.6.3
 ```
 
-**Pasos:**
-1. Agregar constraint de analyzer en `pubspec.yaml`
-2. Ejecutar `flutter pub upgrade`
-3. Regenerar mocks: `flutter pub run build_runner build --delete-conflicting-outputs`
-4. Verificar que tests pasen
-5. Commit y push
-
-**Riesgo:** Puede requerir cambios en código de tests si hay breaking changes.
-
-#### Opción B: Remover Mocks Problemáticos
-
-Si no estás usando los mocks en esos 4 archivos, puedes:
-
-1. Eliminar las annotations `@GenerateMocks([...])`
-2. Eliminar imports de archivos `.mocks.dart`
-3. Regenerar: `flutter pub run build_runner build --delete-conflicting-outputs`
-
-**Riesgo:** Tests dejarán de funcionar si usan esos mocks.
-
-#### Opción C: Downgrade SDK (No recomendado)
-
-Usar Flutter SDK más antiguo compatible con analyzer 7.4.5.
-
-**Riesgo:** Pierdes features y fixes de Flutter 3.38+
-
-### Recomendación
-
-**Para producción inmediata:**
-- ✅ Dejar `build_runner` como non-blocking (ya configurado)
-- ✅ CI/CD funciona sin problemas
-
-**Para largo plazo:**
-- 📋 Agendar tarea: Actualizar analyzer y mockito
-- 📋 Ejecutar localmente: `flutter pub outdated`
-- 📋 Planificar upgrade de dependencias (61 packages desactualizados)
+```bash
+flutter pub upgrade
+flutter pub run build_runner build --delete-conflicting-outputs
+flutter test
+```
 
 ---
 
-## 2. 61 Packages Desactualizados
+## 3. Packages Desactualizados
 
-### Síntoma
-```
-1 package is discontinued.
-61 packages have newer versions incompatible with dependency constraints.
-Try `flutter pub outdated` for more information.
-```
+**Críticos:**
+- `golden_toolkit` - **discontinued** ⚠️
+- `analyzer` 7.4.5 → 10.0.2
+- `mockito` 5.4.6 → 5.6.3
 
-### Packages Críticos Desactualizados
-
-| Package | Actual | Disponible | Tipo |
-|---------|--------|------------|------|
-| `golden_toolkit` | 0.12.0 | discontinued ⚠️ | Test |
-| `analyzer` | 7.4.5 | 10.0.2 | Dev |
-| `mockito` | 5.4.6 | 5.6.3 | Dev |
-| `build_runner` | 2.4.14 | 2.10.5 | Dev |
-| `http` | 0.13.6 | 1.6.0 | Prod |
-| `just_audio` | 0.9.46 | 0.10.5 | Prod |
-
-### Impacto en CI/CD
-
-**Actual:**
-- ✅ Builds funcionan
-- ⚠️ build_runner falla (non-blocking)
-- ⚠️ Warnings de versiones en logs
-
-**Futuro:**
-- ⚠️ Posibles breaking changes si Flutter SDK actualiza
-- ⚠️ Vulnerabilidades de seguridad potenciales
-- ⚠️ Incompatibilidades con nuevas APIs
-
-### Solución
-
-**Estrategia de upgrade:**
-
-1. **Fase 1: Dev dependencies (bajo riesgo)**
-   ```bash
-   flutter pub upgrade analyzer
-   flutter pub upgrade mockito
-   flutter pub upgrade build_runner
-   flutter test  # Verificar que no rompe tests
-   ```
-
-2. **Fase 2: Production dependencies (alto riesgo)**
-   ```bash
-   flutter pub upgrade http
-   flutter pub upgrade just_audio
-   # Probar app completamente antes de commit
-   ```
-
-3. **Fase 3: Deprecated packages**
-   ```bash
-   # golden_toolkit está discontinuado
-   # Evaluar alternativa o remover
-   ```
-
-**Comando útil:**
+**Comando:**
 ```bash
 flutter pub outdated --show-all
 ```
 
-### Recomendación
-
-**Inmediato:**
-- ✅ Ignorar warnings (no bloquean funcionamiento)
-
-**Corto plazo (1-2 semanas):**
-- 📋 Ejecutar `flutter pub outdated`
-- 📋 Crear plan de upgrade
-- 📋 Actualizar dev dependencies primero
-
-**Largo plazo:**
-- 📋 Establecer schedule trimestral de dependency upgrades
-- 📋 Usar Dependabot (opcional)
+**Prioridades:**
+1. Remover golden_toolkit
+2. Actualizar analyzer y mockito
+3. Upgrade completo de dependencias
 
 ---
 
-## 3. Dependencias de Git (native_qr)
+## Checklist Mantenimiento
 
-### Síntoma
-```yaml
-native_qr:
-  git:
-    url: https://github.com/roman-yerin/native_qr.git
-    ref: 8d84d3706f53594d40a47c15b49cf19f41d075be
-```
-
-### Riesgo
-
-- ⚠️ Dependencia de un commit específico (no tag/versión)
-- ⚠️ Si el repo desaparece, el build falla
-- ⚠️ No se actualiza automáticamente con `pub upgrade`
-
-### Solución
-
-**Monitorear:**
-```bash
-# Revisar si hay nueva versión publicada
-flutter pub outdated
-
-# Revisar repo upstream
-# https://github.com/roman-yerin/native_qr/pulls/5
-```
-
-**Si el PR #5 se mergea:**
-```yaml
-# Cambiar a versión de pub.dev
-native_qr: ^1.0.0  # O la versión publicada
-```
-
----
-
-## 📋 Checklist de Mantenimiento
-
-### Mensual
-- [ ] Revisar logs de CI/CD por nuevos warnings
-- [ ] Ejecutar `flutter pub outdated`
+### URGENTE
+- [ ] Remover golden_toolkit
+- [ ] Reescribir tests afectados
+- [ ] Habilitar tests blocking
 
 ### Trimestral
+- [ ] `flutter pub outdated --show-all`
 - [ ] Actualizar dev dependencies
-- [ ] Regenerar mocks si analyzer actualizado
-- [ ] Probar suite completa de tests
-
-### Semestral
-- [ ] Evaluar actualización de production dependencies
-- [ ] Revisar deprecated packages
-- [ ] Actualizar Flutter SDK si hay LTS nueva
-
----
-
-## 🔗 Referencias
-
-- [Flutter Dependency Management](https://docs.flutter.dev/development/packages-and-plugins/using-packages)
-- [Mockito Documentation](https://pub.dev/packages/mockito)
-- [Build Runner Guide](https://pub.dev/packages/build_runner)
-
----
-
-**Última actualización:** 2026-02-04
-**Estado:** build_runner non-blocking, CI/CD funcional
+- [ ] Regenerar mocks
+- [ ] Verificar deprecated packages

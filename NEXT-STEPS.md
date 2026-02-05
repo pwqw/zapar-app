@@ -206,10 +206,15 @@ git push origin v2.2.6-test
 
 ## 📚 Documentación
 
-### Para Entender los Workflows
-⭐ **Lee primero:** `docs/WORKFLOWS-EXPLANATION.md`
+### 🚨 CRÍTICO - Lee Primero
+⚠️ **TEST-FAILURES.md** - Tests completamente rotos (golden_toolkit discontinued)
+- Por qué tests fallan
+- Impacto en CI/CD (0% coverage real)
+- Solución permanente requerida
+- Plan de migración (2-4 horas)
 
-Explica:
+### Para Entender los Workflows
+⭐ **WORKFLOWS-EXPLANATION.md**
 - Por qué 2 workflows separados
 - Por qué `push` en vez de `pull_request`
 - Por qué Java 17
@@ -217,19 +222,24 @@ Explica:
 - Troubleshooting
 
 ### Para Optimizaciones de Performance
-⚡ **Nuevo:** `docs/OPTIMIZATIONS.md`
-
-Explica:
+⚡ **OPTIMIZATIONS.md**
 - 5 optimizaciones implementadas (cache, skip pub get, etc.)
 - Cómo reducir tiempo de 15-20 min a 5-8 min
 - Verificar que el cache funciona
 - Fuentes oficiales y best practices 2025-2026
 
+### Para Issues Conocidos
+⚠️ **KNOWN-ISSUES.md**
+- Issue #1: golden_toolkit discontinued (CRÍTICO)
+- Issue #2: build_runner falla (analyzer desactualizado)
+- Issue #3: 61 packages outdated
+- Checklist de mantenimiento
+
 ### Para Uso Diario
-`docs/CI-CD.md` - Guía de comandos y ejemplos
+**CI-CD.md** - Guía de comandos y ejemplos
 
 ### Para Validación Técnica
-`docs/VALIDATION.md` - Comparación con docs oficiales
+**VALIDATION.md** - Comparación con docs oficiales
 
 ---
 
@@ -297,11 +307,23 @@ git push origin v2.2.7
 
 **Impacto:** CI/CD funciona normal, pero mocks no se regeneran automáticamente
 
-### 4. Tests fallan en CI
+### 4. Tests fallan completamente (golden_toolkit discontinued)
 
-**Causa:** Tests son bloqueantes en CI
+**Causa:** golden_toolkit 0.12.0 está discontinuado e incompatible con Flutter 3.38.9
 
-**Solución:** Arreglar tests antes de pushear, o temporalmente deshabilitarlos
+**Error típico:**
+```
+Error: The setter 'textScaleFactorTestValue' isn't defined for the type 'TestWindow'
+Failed to load test/utils/lrc_parser_test.dart
+```
+
+**Solución temporal:** ✅ Tests configurados como non-blocking en workflows
+
+**Solución permanente:** Ver `docs/KNOWN-ISSUES.md` → sección "golden_toolkit Discontinuado"
+
+**Impacto:** 🚨 **CRÍTICO** - Tests no se ejecutan, bugs no detectados
+
+**Acción requerida:** Remover golden_toolkit y reescribir tests (URGENTE)
 
 ### 5. Workflow tarda mucho
 
@@ -313,15 +335,21 @@ git push origin v2.2.7
 
 **Advertencia en logs:** "61 packages have newer versions incompatible..."
 
-**Causa:** Dependencies antiguas (analyzer, mockito, http, just_audio, etc.)
+**Causa:** Dependencies antiguas, incluyendo **1 discontinued** (golden_toolkit)
 
-**Impacto:** ⚠️ Warnings en logs, pero NO bloquea CI/CD
+**Impacto Crítico:**
+- 🚨 golden_toolkit discontinued → Tests completamente rotos
+- ⚠️ analyzer desactualizado → build_runner falla
+- ⚠️ Warnings en logs para otros packages
 
 **Solución:** Ver `docs/KNOWN-ISSUES.md` → "61 Packages Desactualizados"
 
-**Plan:** Actualizar dev dependencies primero, luego production
+**Plan de acción:**
+1. **URGENTE:** Remover golden_toolkit
+2. Actualizar analyzer y mockito
+3. Actualizar production dependencies
 
-### 4. Workflow tarda mucho
+### 7. Workflow tarda mucho
 
 **Causa:** Primera ejecución sin cache
 
@@ -377,12 +405,17 @@ Antes de considerar completo:
 
 ## 📞 Archivos Útiles
 
-- ⭐ `docs/WORKFLOWS-EXPLANATION.md` - Explicación completa
-- ⚡ `docs/OPTIMIZATIONS.md` - Optimizaciones de performance (NUEVO)
-- `docs/CI-CD.md` - Guía de uso
-- `docs/VALIDATION.md` - Validación técnica
-- `.github/workflows/ci.yml` - Workflow de CI (optimizado)
-- `.github/workflows/build-deploy.yml` - Workflow de Build (optimizado)
+### Documentación (docs/)
+- 🚨 **TEST-FAILURES.md** - Tests rotos (golden_toolkit) - LEER URGENTE
+- ⭐ **WORKFLOWS-EXPLANATION.md** - Explicación completa de workflows
+- ⚡ **OPTIMIZATIONS.md** - Optimizaciones de performance
+- ⚠️ **KNOWN-ISSUES.md** - Issues conocidos y soluciones
+- **CI-CD.md** - Guía de uso diario
+- **VALIDATION.md** - Validación técnica
+
+### Workflows (.github/workflows/)
+- **ci.yml** - Workflow de CI (optimizado, tests non-blocking)
+- **build-deploy.yml** - Workflow de Build (optimizado, tests non-blocking)
 
 ---
 
