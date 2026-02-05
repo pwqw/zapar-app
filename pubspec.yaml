@@ -42,7 +42,7 @@ dependencies:
   shimmer: ^2.0.0
   just_audio: ^0.9.32
   audio_service: ^0.18.9
-  figma_squircle: ^0.6.3
+  figma_squircle: ^0.5.3
   connectivity_plus: ^5.0.0
   path_provider: ^2.0.14
   scrolls_to_top: ^2.1.1
