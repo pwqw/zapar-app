@@ -1,18 +1,8 @@
-name: Build & Deploy
+name: Deploy to Play Store
 
 on:
   workflow_dispatch:
     inputs:
-      build_ios:
-        description: 'Build iOS app (requires macOS runner)'
-        required: false
-        type: boolean
-        default: false
-      deploy_to_playstore:
-        description: 'Deploy to Google Play Store'
-        required: false
-        type: boolean
-        default: false
       track:
         description: 'Play Store track (internal/alpha/beta/production)'
         required: false
@@ -31,10 +21,10 @@ env:
   BASE_VERSION_CODE: 100
 
 jobs:
-  build-android:
-    name: Build Android
+  deploy-playstore:
+    name: Deploy to Play Store
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     environment: PlayStore
 
     steps:
@@ -237,13 +227,6 @@ jobs:
           echo "✅ local.properties created:"
           cat android/local.properties
 
-      - name: Build release APKs (split per ABI)
-        run: |
-          echo "Building release APKs..."
-          flutter build apk --release --split-per-abi \
-            --build-name=${{ steps.version.outputs.VERSION_NAME }} \
-            --build-number=${{ steps.version.outputs.VERSION_CODE }}
-
       - name: Build release AAB (Google Play)
         run: |
           echo "Building release AAB..."
@@ -252,30 +235,8 @@ jobs:
             --build-number=${{ steps.version.outputs.VERSION_CODE }}
 
       # =================================================================
-      # FASE 4: VALIDACIÓN POST-BUILD
+      # FASE 4: VALIDACIÓN AAB
       # =================================================================
-
-      - name: Validate APK outputs
-        run: |
-          echo "📦 Validating generated APKs..."
-          ls -lh build/app/outputs/flutter-apk/
-
-          # Check each expected APK
-          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-            apk_file="build/app/outputs/flutter-apk/app-${abi}-release.apk"
-            if [ -f "$apk_file" ]; then
-              size=$(stat -c%s "$apk_file")
-              if [ "$size" -gt 1048576 ]; then
-                echo "✅ $apk_file: $(numfmt --to=iec-i --suffix=B $size)"
-              else
-                echo "❌ $apk_file is too small ($size bytes)"
-                exit 1
-              fi
-            else
-              echo "❌ Missing: $apk_file"
-              exit 1
-            fi
-          done
 
       - name: Validate AAB output
         run: |
@@ -295,25 +256,9 @@ jobs:
             exit 1
           fi
 
-      - name: List all outputs
-        run: |
-          echo "=== All build outputs ==="
-          find build/app/outputs -type f -name "*.apk" -o -name "*.aab" | while read file; do
-            size=$(stat -c%s "$file")
-            echo "$(numfmt --to=iec-i --suffix=B $size) - $file"
-          done
-
       # =================================================================
-      # FASE 5: ARTIFACTS
+      # FASE 5: ARTIFACT AAB
       # =================================================================
-
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: apks-${{ steps.version.outputs.VERSION_NAME }}
-          path: build/app/outputs/flutter-apk/*.apk
-          retention-days: 30
-          if-no-files-found: error
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
@@ -324,87 +269,10 @@ jobs:
           if-no-files-found: error
 
       # =================================================================
-      # FASE 6: GITHUB RELEASE (solo para tags)
-      # =================================================================
-
-      - name: Prepare release assets
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo "Preparing release assets..."
-          mkdir -p release-assets
-
-          # Copy and rename APKs
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-             release-assets/zapar-app-${{ steps.version.outputs.VERSION_NAME }}-armeabi-v7a.apk
-
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-             release-assets/zapar-app-${{ steps.version.outputs.VERSION_NAME }}-arm64-v8a.apk
-
-          cp build/app/outputs/flutter-apk/app-x86-release.apk \
-             release-assets/zapar-app-${{ steps.version.outputs.VERSION_NAME }}-x86.apk
-
-          cp build/app/outputs/flutter-apk/app-x86_64-release.apk \
-             release-assets/zapar-app-${{ steps.version.outputs.VERSION_NAME }}-x86_64.apk
-
-          # Copy AAB
-          cp build/app/outputs/bundle/release/app-release.aab \
-             release-assets/zapar-app-${{ steps.version.outputs.VERSION_NAME }}.aab
-
-          echo "✅ Release assets prepared:"
-          ls -lh release-assets/
-
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release-assets/*
-          generate_release_notes: true
-          body: |
-            ## 📦 Zapar App ${{ steps.version.outputs.VERSION_NAME }}
-
-            ### Instalación
-
-            Descarga el APK correspondiente a tu dispositivo:
-
-            - **ARM 64-bit** (Recomendado para mayoría de dispositivos modernos):
-              `zapar-app-${{ steps.version.outputs.VERSION_NAME }}-arm64-v8a.apk`
-
-            - **ARM 32-bit** (Dispositivos antiguos):
-              `zapar-app-${{ steps.version.outputs.VERSION_NAME }}-armeabi-v7a.apk`
-
-            - **x86 64-bit** (Emuladores):
-              `zapar-app-${{ steps.version.outputs.VERSION_NAME }}-x86_64.apk`
-
-            - **x86 32-bit** (Emuladores antiguos):
-              `zapar-app-${{ steps.version.outputs.VERSION_NAME }}-x86.apk`
-
-            ### Google Play Store
-
-            El archivo AAB está disponible para publicación en Google Play:
-            `zapar-app-${{ steps.version.outputs.VERSION_NAME }}.aab`
-
-            ### Instalación vía ADB
-
-            ```bash
-            adb install -r zapar-app-${{ steps.version.outputs.VERSION_NAME }}-arm64-v8a.apk
-            ```
-
-            ### Build Info
-
-            - **Version Name:** ${{ steps.version.outputs.VERSION_NAME }}
-            - **Version Code:** ${{ steps.version.outputs.VERSION_CODE }}
-            - **Target SDK:** 35
-            - **Compile SDK:** 36
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # =================================================================
-      # FASE 7: DEPLOY A PLAY STORE (opcional)
+      # FASE 6: DEPLOY A PLAY STORE
       # =================================================================
 
       - name: Deploy to Google Play Store
-        if: github.event.inputs.deploy_to_playstore == 'true' || startsWith(github.ref, 'refs/tags/v')
-        continue-on-error: true
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
@@ -415,75 +283,23 @@ jobs:
           inAppUpdatePriority: 3
 
       # =================================================================
-      # FASE 8: BUILD SUMMARY
+      # FASE 7: BUILD SUMMARY
       # =================================================================
 
-      - name: Build summary
+      - name: Deployment summary
         if: always()
         run: |
-          echo "## 📊 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Play Store Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.version.outputs.VERSION_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version Code:** ${{ steps.version.outputs.VERSION_CODE }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### APKs generados:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-            apk_file="build/app/outputs/flutter-apk/app-${abi}-release.apk"
-            if [ -f "$apk_file" ]; then
-              size=$(stat -c%s "$apk_file")
-              echo "- ✅ \`$abi\`: $(numfmt --to=iec-i --suffix=B $size)" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "- ❌ \`$abi\`: Missing" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### AAB:" >> $GITHUB_STEP_SUMMARY
+          echo "**Track:** ${{ github.event.inputs.track || 'internal' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           aab_file="build/app/outputs/bundle/release/app-release.aab"
           if [ -f "$aab_file" ]; then
             size=$(stat -c%s "$aab_file")
-            echo "- ✅ Google Play Bundle: $(numfmt --to=iec-i --suffix=B $size)" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **AAB generado:** $(numfmt --to=iec-i --suffix=B $size)" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ❌ Google Play Bundle: Missing" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Error:** AAB no generado" >> $GITHUB_STEP_SUMMARY
           fi
-
-  build-ios:
-    name: Build iOS
-    runs-on: macos-latest
-    timeout-minutes: 60
-    if: github.event.inputs.build_ios == 'true'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.x'
-          channel: 'stable'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build iOS (no-codesign)
-        run: |
-          echo "⚠️ iOS build requires Apple Developer account and code signing"
-          echo "Building without code signing for validation only..."
-          flutter build ios --release --no-codesign
-
-      - name: iOS build placeholder
-        run: |
-          echo "## 📱 iOS Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ iOS builds require:" >> $GITHUB_STEP_SUMMARY
-          echo "- Apple Developer account (\$99/año)" >> $GITHUB_STEP_SUMMARY
-          echo "- Code signing certificate" >> $GITHUB_STEP_SUMMARY
-          echo "- Provisioning profile" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Para producción, configurar Fastlane y secrets de iOS." >> $GITHUB_STEP_SUMMARY
