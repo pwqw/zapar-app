@@ -1,0 +1,9 @@
+{
+    "name": "Zapar",
+    "short_name": "Zapar",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#1B0047",
+    "theme_color": "#1B0047",
+    "description": "Music app"
+}

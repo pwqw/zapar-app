@@ -13,8 +13,8 @@ help: ## Mostrar ayuda
 build: ## Construir imagen (BuildKit para cache de Flutter/precache)
 	DOCKER_BUILDKIT=1 docker build -t $(IMAGE_NAME) .
 
-dev: ## Desarrollo con hot reload (puerto 7000)
-	docker run -it --rm \
+dev: ## Desarrollo con hot reload (puerto 7000), sin TTY para IDE/scripts
+	docker run --rm \
 		--name $(CONTAINER_NAME_DEV) \
 		-p 7000:7000 \
 		-v $(PWD):/app \

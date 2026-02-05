@@ -13,7 +13,7 @@ ThemeData themeData(BuildContext context) {
       space: 0,
       thickness: .5,
     ),
-    tabBarTheme: TabBarThemeData(
+    tabBarTheme: TabBarTheme(
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white54,
       indicatorColor: AppColors.highlight,
@@ -123,23 +123,23 @@ ThemeData themeData(BuildContext context) {
     // The default theme for ElevatedButton widgets.
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
-        shape: WidgetStateProperty.all(
+        shape: MaterialStateProperty.all(
           RoundedRectangleBorder(
             side: BorderSide.none,
             borderRadius: AppDimensions.inputBorderRadius,
           ),
         ),
-        textStyle: WidgetStateProperty.all(
+        textStyle: MaterialStateProperty.all(
           const TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.w500,
           ),
         ),
-        backgroundColor: WidgetStateProperty.all(AppColors.highlight),
-        foregroundColor: WidgetStateProperty.all(AppColors.white),
-        overlayColor: WidgetStateProperty.all(AppColors.highlightAccent),
-        elevation: WidgetStateProperty.all(0),
-        padding: WidgetStateProperty.all(AppDimensions.inputPadding),
+        backgroundColor: MaterialStateProperty.all(AppColors.highlight),
+        foregroundColor: MaterialStateProperty.all(AppColors.white),
+        overlayColor: MaterialStateProperty.all(AppColors.highlightAccent),
+        elevation: MaterialStateProperty.all(0),
+        padding: MaterialStateProperty.all(AppDimensions.inputPadding),
       ),
     ),
 
@@ -195,7 +195,7 @@ ThemeData themeData(BuildContext context) {
       ),
     ),
 
-    cardTheme: CardThemeData(
+    cardTheme: CardTheme(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       elevation: 0,
