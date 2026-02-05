@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Flutter (Dart 3.x, requerido por ulid ^2.0.1 y alineado con CI/producción)
-ENV FLUTTER_VERSION=3.16.9
+# Instalar Flutter (Dart 3.4+ requerido por figma_squircle ^0.6.3 y otras deps)
+ENV FLUTTER_VERSION=3.24.5
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH="$FLUTTER_HOME/bin:$PATH"
 # Pub cache en ruta fija para montar volumen y persistir entre runs (doc: dart.dev/tools/pub/environment-variables)
