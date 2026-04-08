@@ -1,8 +1,10 @@
+import 'package:app/models/models.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:just_audio/just_audio.dart';
 
 /// Stub implementation of AudioHandler para web.
 /// En web, no se soportan APIs de audio nativas.
-class AudioHandlerStub extends BaseAudioHandler {
+class AudioHandlerStub extends BaseAudioHandler with QueueHandler, SeekHandler {
   @override
   Future<void> play() async {}
 
@@ -49,4 +51,48 @@ class AudioHandlerStub extends BaseAudioHandler {
 
   @override
   Future<void> updateMediaItem(MediaItem mediaItem) async {}
+
+  /// Custom methods from KoelAudioHandler (required by the app)
+  Future<void> init({
+    required dynamic playableProvider,
+    required dynamic downloadProvider,
+  }) async {}
+
+  void enterRadioMode(AudioPlayer radioPlayer) {}
+
+  void exitRadioMode() {}
+
+  void updateRadioPlaybackState({
+    required bool playing,
+    required AudioProcessingState processingState,
+  }) {}
+
+  void setPlaybackPositionToState(String playableId, num position) {}
+
+  void moveQueueItem(int oldIndex, int newIndex) {}
+
+  Future<void> queueAndPlay(Playable playable) async {}
+
+  Future<void> maybeQueueAndPlay(Playable playable, {position = 0}) async {}
+
+  Future<void> queueAfterCurrent(Playable playable) async {}
+
+  Future<bool> queued(Playable playable) async => false;
+
+  Future<void> clearQueue() async {}
+
+  Future<void> replaceQueue(
+    List<Playable> playables, {
+    int initialIndex = 0,
+    bool shuffle = false,
+  }) async {}
+
+  Future<void> queueToBottom(Playable playable) async {}
+
+  Future<void> removeFromQueue(Playable playable) async {}
+
+  num getPlaybackPositionFromState(String playableId) => 0;
 }
+
+/// Type alias for compatibility with KoelAudioHandler naming
+typedef KoelAudioHandler = AudioHandlerStub;

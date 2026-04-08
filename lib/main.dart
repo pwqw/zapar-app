@@ -10,7 +10,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-late BaseAudioHandler audioHandler;
+late KoelAudioHandler audioHandler;
 
 List<SingleChildWidget> _providers = [
   Provider(create: (_) => AuthProvider()),
