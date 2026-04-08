@@ -28,6 +28,36 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+def resolvedApplicationId = null
+def fromLocalApplicationId = localProperties.getProperty('android.applicationId')
+if (fromLocalApplicationId != null && !fromLocalApplicationId.trim().isEmpty()) {
+    resolvedApplicationId = fromLocalApplicationId.trim()
+}
+if (resolvedApplicationId == null) {
+    def envFile = new File(rootProject.projectDir, '../.env')
+    if (envFile.exists()) {
+        envFile.eachLine { String line ->
+            if (resolvedApplicationId != null) {
+                return
+            }
+            String trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+                return
+            }
+            if (trimmed.startsWith('ANDROID_APPLICATION_ID=')) {
+                String v = trimmed.substring('ANDROID_APPLICATION_ID='.length()).trim()
+                if (v.length() >= 2 && ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")))) {
+                    v = v.substring(1, v.length() - 1)
+                }
+                resolvedApplicationId = v
+            }
+        }
+    }
+}
+if (resolvedApplicationId == null || resolvedApplicationId.isEmpty()) {
+    resolvedApplicationId = 'phanan.koel.app'
+}
+
 android {
     compileSdk 36
     ndkVersion flutter.ndkVersion
@@ -46,7 +76,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.zapar.app"
+        applicationId resolvedApplicationId
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
