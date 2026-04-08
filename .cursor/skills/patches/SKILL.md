@@ -57,6 +57,12 @@ Si falla: leer `patches/NNN-nombre.md` (fuente de verdad), alinear con upstream,
   - BuildKit cache para `apt`
   - volúmenes versionados por `Flutter + hash(pubspec.lock)` para `PUB_CACHE`, `.dart_tool` y `build`
 
+### 1.6 — Flutter web (`app/web/index.html`) y Makefile del repo Koel (`web/Makefile`)
+
+- Son **dos repositorios**: el player Flutter vive en `app/`, Koel (Laravel) en `web/`. El parche **005** documenta `web/index.html`; el `Makefile` de Laravel **no** entra en ningún `.patch` de `app` (está en el otro repo).
+- Cualquier cambio en `app/web/index.html` (bootstrap, `base href`, PWA) debe revisarse junto con `web/Makefile` (targets `dev`, puertos, volúmenes). Lista y orden en `patches/005-web-dev-stub.md`.
+- Al regenerar el parche 005, incluir en el diff los archivos que ese `.md` liste (típicamente `lib/audio_handler_stub.dart` y `web/index.html` respecto a `master`).
+
 ### 2 — Verificar
 
 - `flutter analyze` sin errores nuevos

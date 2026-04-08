@@ -41,6 +41,8 @@ Regenerar el parche NNN desde el working tree actual.
 git diff upstream/master -- <archivos-del-parche> > patches/NNN-nombre.patch
 ```
 
+**Parche 005 (web dev)**: además de Dart, suele incluir `web/index.html`. Archivos en el repo hermano **`web/`** (Koel), p. ej. `web/Makefile`, **no** van en el `.patch` de `app`; el `.md` del parche describe la coordinación y commits separados en ese repo.
+
 3. `git apply --check patches/NNN-nombre.patch`
 4. Resumir cambios respecto al parche anterior y si el `.md` sigue siendo preciso
 
