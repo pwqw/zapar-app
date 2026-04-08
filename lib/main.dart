@@ -1,15 +1,16 @@
 import 'dart:async';
 
-import 'package:app/audio_handler.dart';
+import 'audio_handler.dart' if (dart.library.html) 'audio_handler_stub.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/app.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
-late KoelAudioHandler audioHandler;
+late BaseAudioHandler audioHandler;
 
 List<SingleChildWidget> _providers = [
   Provider(create: (_) => AuthProvider()),
@@ -92,7 +93,7 @@ List<SingleChildWidget> _providers = [
 
 Future<void> main() async {
   audioHandler = await AudioService.init(
-    builder: () => KoelAudioHandler(),
+    builder: () => kIsWeb ? AudioHandlerStub() : KoelAudioHandler(),
     config: AudioServiceConfig(
       androidNotificationChannelId: 'dev.koel.app.channel.audio',
       androidNotificationChannelName: 'Koel audio playback',

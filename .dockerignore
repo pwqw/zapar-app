@@ -1,0 +1,17 @@
+# Optimizar build context
+
+.git
+.gitignore
+.github
+*.md
+docs/
+
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+.idea
+.vscode
+*.swp
+*.log
