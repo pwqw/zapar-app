@@ -1,14 +1,19 @@
 .PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
 
-IMAGE_NAME := zapar-dev
+-include .env
+
 FLUTTER_VERSION := 3.27.4
 LOCK_HASH := $(shell shasum -a 256 pubspec.lock | awk '{print substr($$1,1,12)}')
 VOLUME_SUFFIX := $(FLUTTER_VERSION)-$(LOCK_HASH)
-CONTAINER_NAME_DEV := zapar-dev
-CONTAINER_NAME_TEST := zapar-dev-test
-PUB_CACHE_VOLUME := zapar-pub-$(VOLUME_SUFFIX)
-DART_TOOL_VOLUME := zapar-darttool-$(VOLUME_SUFFIX)
-BUILD_VOLUME := zapar-build-$(VOLUME_SUFFIX)
+
+IMAGE_NAME ?= koel-dev
+CONTAINER_NAME_DEV ?= koel-dev
+CONTAINER_NAME_TEST ?= koel-dev-test
+DOCKER_VOLUME_PREFIX ?= koel
+
+PUB_CACHE_VOLUME := $(DOCKER_VOLUME_PREFIX)-pub-$(VOLUME_SUFFIX)
+DART_TOOL_VOLUME := $(DOCKER_VOLUME_PREFIX)-darttool-$(VOLUME_SUFFIX)
+BUILD_VOLUME := $(DOCKER_VOLUME_PREFIX)-build-$(VOLUME_SUFFIX)
 
 help:
 	@echo "Comandos:"
@@ -70,7 +75,7 @@ web-build-docker:
 		$(IMAGE_NAME) \
 		sh -lc "flutter pub get && flutter build web --release"
 
-analyze-docker: ## flutter analyze en imagen zapar-dev (warnings/info no fallan el exit code)
+analyze-docker: ## flutter analyze en imagen koel-dev (warnings/info no fallan el exit code)
 	docker run --rm \
 		-v $(PWD):/app \
 		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
@@ -120,11 +125,11 @@ logs:
 
 shell: docker-shell
 
-cache-list: ## Listar caches Docker de Zapar
-	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ {print}'
+cache-list: ## Listar caches Docker de este prefijo (DOCKER_VOLUME_PREFIX)
+	@docker volume ls --format '{{.Name}}' | awk '/^$(DOCKER_VOLUME_PREFIX)-(pub|darttool|build)-/ {print}'
 
 cache-prune: ## Borrar caches viejos y conservar el hash actual
-	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ && $$0 !~ /$(VOLUME_SUFFIX)$$/ {print}' | xargs -r docker volume rm
+	@docker volume ls --format '{{.Name}}' | awk '/^$(DOCKER_VOLUME_PREFIX)-(pub|darttool|build)-/ && $$0 !~ /$(VOLUME_SUFFIX)$$/ {print}' | xargs -r docker volume rm
 
-cache-prune-all: ## Borrar todos los caches Docker de Zapar
-	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ {print}' | xargs -r docker volume rm
+cache-prune-all: ## Borrar todos los caches Docker de este prefijo
+	@docker volume ls --format '{{.Name}}' | awk '/^$(DOCKER_VOLUME_PREFIX)-(pub|darttool|build)-/ {print}' | xargs -r docker volume rm
