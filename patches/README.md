@@ -1,4 +1,4 @@
-# Patches — Zapar fork de koel/player
+# Patches — fork Koel (koel/player)
 
 ## Filosofía
 
@@ -6,13 +6,15 @@ Este repositorio es un fork de [koel/player](https://github.com/koel/player). La
 
 Cada parche es un archivo `.patch` (generado con `git format-patch`) acompañado de un `.md` que documenta su propósito y contiene instrucciones para un agente de programación.
 
+Overrides locales (Docker, `applicationId`, etc.) van en **`.env`** (ver `.env.example`), no en el índice git.
+
 ## Índice de parches
 
 | # | Archivo | Descripción | Dependencias |
 |---|---------|-------------|--------------|
 | 001 | `001-docker-dev.patch` | Dockerfile y .dockerignore para desarrollo local | ninguna |
 | 002 | `002-ci-workflow.patch` | GitHub Actions: CI + build + deploy a Play Store | ninguna |
-| 003 | `003-android-signing.patch` | `applicationId` Zapar (`com.zapar.app`); firma ya en upstream | ninguna |
+| 003 | `003-android-signing.patch` | `applicationId` desde `local.properties` / `.env`; por defecto `phanan.koel.app` | ninguna |
 | 004 | `004-android-signing-docs.patch` | Documentación de Play Store signing | 003 |
 | 005 | `005-web-dev-stub.patch` | Makefile + audio stub + guards kIsWeb para dev en navegador | ninguna |
 

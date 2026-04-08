@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Apply Zapar fork patches over upstream/master
+# Apply Koel fork patches over upstream/master
 # Usage: ./patches/apply-patches.sh [--check] [--from NNN]
 
 PATCHES_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -25,7 +25,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
-echo "=== Zapar Fork Patch System ==="
+echo "=== Koel fork — patch system ==="
 echo "Directorio: $REPO_DIR"
 echo "Rama actual: $(git branch --show-current)"
 echo ""
