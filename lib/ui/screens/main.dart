@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:app/app_state.dart';
 import 'package:app/constants/constants.dart';
 import 'package:app/enums.dart';
@@ -8,6 +6,7 @@ import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/screens/screens.dart';
 import 'package:app/ui/widgets/widgets.dart';
+import 'package:app/utils/platform_compat.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -169,7 +168,7 @@ class _ConnectivityInfoBoxState extends State<ConnectivityInfoBox>
 
   @override
   Widget build(BuildContext context) {
-    var padding = EdgeInsets.only(top: 16, bottom: Platform.isIOS ? 32 : 16);
+    var padding = EdgeInsets.only(top: 16, bottom: isIOSDevice ? 32 : 16);
 
     return FrostedGlassBackground(
       child: Container(

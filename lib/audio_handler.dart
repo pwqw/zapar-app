@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:app/app_state.dart';
 import 'package:app/extensions/extensions.dart';
 import 'package:app/models/models.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/utils/api_request.dart';
+import 'package:app/utils/platform_compat.dart';
 import 'package:app/utils/features.dart';
 import 'package:app/utils/preferences.dart' as preferences;
 import 'package:app/values/queue_state.dart';
@@ -106,7 +105,7 @@ class KoelAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
           // iOS 16+ seems to treat "idle" as "stopped" and close the audio
           // session, so we use "ready" to keep it alive.
           // @see https://stackoverflow.com/a/75236414
-          ProcessingState.idle: Platform.isIOS
+          ProcessingState.idle: isIOSDevice
               ? AudioProcessingState.ready
               : AudioProcessingState.idle,
           ProcessingState.loading: AudioProcessingState.loading,

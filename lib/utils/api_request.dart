@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:app/exceptions/exceptions.dart';
 import 'package:app/utils/preferences.dart' as preferences;
@@ -16,12 +15,12 @@ Future<dynamic> request(
 
   Uri uri = Uri.parse('${preferences.apiBaseUrl}/$path');
 
+  const jsonMime = 'application/json';
   Map<String, String> headers = {
-    HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
-    HttpHeaders.acceptHeader: ContentType.json.mimeType,
+    'Content-Type': jsonMime,
+    'Accept': jsonMime,
     'X-Api-Version': preferences.apiVersion,
-    if (preferences.apiToken != null)
-      HttpHeaders.authorizationHeader: 'Bearer ${preferences.apiToken}',
+    if (preferences.apiToken != null) 'Authorization': 'Bearer ${preferences.apiToken}',
   };
 
   switch (method) {

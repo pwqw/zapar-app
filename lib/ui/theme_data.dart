@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:app/constants/constants.dart';
+import 'package:app/utils/platform_compat.dart';
 import 'package:app/utils/full_width_slider_track_shape.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +24,7 @@ ThemeData themeData(BuildContext context) {
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: AppColors.black.withOpacity(.3),
-      shape: Platform.isIOS
+      shape: isIOSDevice
           ? SmoothRectangleBorder(
               borderRadius: SmoothBorderRadius(
                 cornerRadius: 32,
