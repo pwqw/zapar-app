@@ -35,7 +35,7 @@ Pipeline de CI que compila el AAB de Android firmado y lo publica a Google Play 
    - `PACKAGE_NAME`, `GOOGLE_PLAY_SERVICE_ACCOUNT`
 
 ## Orden de actualización
-- Si upstream cambia la versión de Flutter requerida: ajustar el setup step
+- Mantener la versión de Flutter del workflow alineada con la usada en Docker/local; la rama actual requiere Dart >= 3.4, por lo que no debe volver a 3.16.x
 - Si cambia el `build.gradle` de upstream: verificar que `key.properties` sigue siendo compatible
 - Si Google Play cambia la API: actualizar la action de upload
 

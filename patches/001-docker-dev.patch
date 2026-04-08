@@ -21,74 +21,184 @@ index 0000000..a934970
 +.vscode
 +*.swp
 +*.log
+diff --git a/.gitignore b/.gitignore
+index cc95d74..35476f9 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -31,6 +31,9 @@
+ .pub/
+ /build/
+ /ios/build/
++/linux/flutter/ephemeral/
++/macos/Flutter/ephemeral/
++/macos/Flutter/GeneratedPluginRegistrant.swift
+ 
+ # Web related
+ lib/generated_plugin_registrant.dart
 diff --git a/Dockerfile b/Dockerfile
 new file mode 100644
-index 0000000..6c1c7a5
+index 0000000..10aa64f
 --- /dev/null
 +++ b/Dockerfile
-@@ -0,0 +1,40 @@
-+# syntax=docker/dockerfile:1
+@@ -0,0 +1,34 @@
++# syntax=docker/dockerfile:1.7
++# Imagen de toolchain Flutter para desarrollo web (código vía volumen en runtime).
 +
-+# Build Flutter app in container
-+FROM debian:bookworm
++FROM ubuntu:22.04
 +
-+# Install system dependencies
-+RUN apt-get update && apt-get install -y \
-+    git \
++ARG FLUTTER_VERSION=3.27.4
++
++RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
++    --mount=type=cache,target=/var/lib/apt,sharing=locked \
++    apt-get update && apt-get install -y \
 +    curl \
++    git \
++    python3 \
 +    unzip \
 +    xz-utils \
-+    build-essential \
-+    libglu1-mesa \
-+    libstdc++-12-dev \
 +    && rm -rf /var/lib/apt/lists/*
 +
-+# Install Flutter SDK
-+WORKDIR /opt
-+RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1
-+ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:$PATH"
++ENV FLUTTER_HOME=/opt/flutter
++ENV PATH="$FLUTTER_HOME/bin:$PATH"
++ENV PUB_CACHE=/var/pub-cache
 +
-+# Pre-download platform tooling
-+RUN flutter precache
++RUN git clone --depth 1 --branch ${FLUTTER_VERSION} https://github.com/flutter/flutter.git ${FLUTTER_HOME}
 +
-+# Create app directory
++RUN git config --global --add safe.directory /opt/flutter
++
++RUN flutter config --no-analytics --enable-web && \
++    flutter precache --web
++
++RUN mkdir -p /var/pub-cache
 +WORKDIR /app
 +
-+# Copy pubspec files (cache dependencies)
-+COPY pubspec.yaml pubspec.lock ./
-+
-+# Get dependencies
-+RUN flutter pub get
-+
-+# Copy entire app
-+COPY . .
-+
-+# Build & run
 +EXPOSE 8080
-+CMD ["flutter", "run", "-d", "chrome", "--web-port=8080"]
++
++CMD ["flutter", "run", "-d", "web-server", "--web-hostname", "0.0.0.0", "--web-port", "8080", "--web-renderer", "html"]
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..3c6d7d7
+index 0000000..2d123c9
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,20 @@
-+.PHONY: docker-build docker-run docker-shell web-build web-serve clean
+@@ -0,0 +1,121 @@
++.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
 +
-+docker-build:
-+	docker build -t zapar-dev .
++IMAGE_NAME := zapar-dev
++FLUTTER_VERSION := 3.27.4
++LOCK_HASH := $(shell shasum -a 256 pubspec.lock | awk '{print substr($$1,1,12)}')
++VOLUME_SUFFIX := $(FLUTTER_VERSION)-$(LOCK_HASH)
++CONTAINER_NAME_DEV := zapar-dev
++CONTAINER_NAME_TEST := zapar-dev-test
++PUB_CACHE_VOLUME := zapar-pub-$(VOLUME_SUFFIX)
++DART_TOOL_VOLUME := zapar-darttool-$(VOLUME_SUFFIX)
++BUILD_VOLUME := zapar-build-$(VOLUME_SUFFIX)
++
++help:
++	@echo "Comandos:"
++	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
++	@echo ""
++	@echo "Cache actual: $(VOLUME_SUFFIX)"
++
++build: ## Construir imagen Docker (Flutter + web)
++	DOCKER_BUILDKIT=1 docker build -t $(IMAGE_NAME) .
++
++docker-build: build ## Alias
++
++dev: dev-live ## Servidor HTTP en Docker (hot reload). http://localhost:8080
++
++dev-live: ## flutter run web-server en contenedor (puerto 8080)
++	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
++	docker run --rm \
++		--name $(CONTAINER_NAME_DEV) \
++		-p 8080:8080 \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
++
++dev-static: ## build web + python http.server (sin hot reload)
++	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
++	docker run --rm \
++		--name $(CONTAINER_NAME_DEV) \
++		-p 8080:8080 \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -lc "flutter pub get && flutter build web --release && python3 -m http.server 8080 --directory build/web"
 +
 +docker-run:
-+	docker run -it --rm zapar-dev
++	docker run --rm -it $(IMAGE_NAME)
 +
 +docker-shell:
-+	docker run -it --rm -v $(PWD):/app zapar-dev /bin/bash
++	docker run --rm -it \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) /bin/bash
 +
 +web-build:
 +	flutter build web --release
 +
++web-build-docker:
++	docker run --rm \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -lc "flutter pub get && flutter build web --release"
++
 +web-serve:
-+	flutter run -d chrome --web-port=8080
++	flutter run -d web-server --web-hostname localhost --web-port=8080
++
++web-serve-docker:
++	docker run --rm -p 8080:8080 \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
++
++test: ## Tests en Docker (build_runner + flutter test)
++	@docker stop $(CONTAINER_NAME_TEST) 2>/dev/null || true
++	@docker rm $(CONTAINER_NAME_TEST) 2>/dev/null || true
++	docker run --rm \
++		--name $(CONTAINER_NAME_TEST) \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -c "flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs && flutter test"
++
++stop:
++	@docker stop $(CONTAINER_NAME_DEV) $(CONTAINER_NAME_TEST) 2>/dev/null || true
++	@docker rm $(CONTAINER_NAME_DEV) $(CONTAINER_NAME_TEST) 2>/dev/null || true
 +
 +clean:
 +	flutter clean
-+	rm -rf build/ web/
++	rm -rf build/
++
++clean-docker: stop
++	@docker rmi $(IMAGE_NAME) 2>/dev/null || true
++	@docker volume rm $(PUB_CACHE_VOLUME) $(DART_TOOL_VOLUME) $(BUILD_VOLUME) 2>/dev/null || true
++
++logs:
++	docker logs -f $(CONTAINER_NAME_DEV)
++
++shell: docker-shell
++
++cache-list: ## Listar caches Docker de Zapar
++	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ {print}'
++
++cache-prune: ## Borrar caches viejos y conservar el hash actual
++	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ && $$0 !~ /$(VOLUME_SUFFIX)$$/ {print}' | xargs -r docker volume rm
++
++cache-prune-all: ## Borrar todos los caches Docker de Zapar
++	@docker volume ls --format '{{.Name}}' | awk '/^zapar-(pub|darttool|build)-/ {print}' | xargs -r docker volume rm

@@ -1,34 +1,25 @@
 # 001 — Docker Dev Environment
 
 ## Propósito
-Agregar soporte de Docker para desarrollo local del proyecto Flutter. Permite levantar un contenedor con el SDK de Flutter configurado, sin necesidad de instalar Flutter en el host.
+Imagen Docker solo con **toolchain Flutter** (Ubuntu 22.04, Flutter 3.27.4, web precache, Python para `http.server`). El código se monta con **volumen** en `make dev`; no se copia el repo en la imagen. Los caches de runtime quedan versionados por `Flutter + hash(pubspec.lock)` para evitar descargas y recompilaciones repetidas.
 
 ## Archivos afectados
-- `Dockerfile` — Imagen basada en Flutter SDK con dependencias del proyecto
-- `.dockerignore` — Exclusiones para el build context
+- `Dockerfile` — Flutter fijado por tag, `PUB_CACHE=/var/pub-cache`, cache de `apt` con BuildKit, `CMD` por defecto `web-server` en `0.0.0.0:8080`
+- `.dockerignore` — Reduce contexto de `docker build`
+- `.gitignore` — Ignora artefactos generados por Flutter desktop/web durante el flujo Docker (`linux/flutter/ephemeral`, `macos/Flutter/ephemeral`, `GeneratedPluginRegistrant.swift`)
+- `Makefile` — `build`, `dev` (= `dev-live`), `dev-static`, tests en contenedor, volúmenes versionados y comandos para listar/purgar cache
 
-## Orden de construcción (desde upstream/master limpio)
-
-1. Crear `Dockerfile` en la raíz del proyecto (`app/`):
-   - Base: imagen oficial de Flutter o Ubuntu + Flutter SDK
-   - Instalar dependencias del sistema necesarias para Flutter
-   - Copiar `pubspec.yaml` y `pubspec.lock` primero (cache de deps)
-   - Luego copiar el resto del código
-   - Working dir: `/app`
-   - CMD por defecto: `flutter run` o shell interactivo
-
-2. Crear `.dockerignore`:
-   - Excluir: `.dart_tool/`, `build/`, `.flutter-plugins`, `.idea/`, `*.iml`, `.git/`
-   - Incluir: todo lo demás necesario para el build
-
-3. Verificar: `docker build -t zapar-dev .` debe completar sin errores
+## Uso
+- `make build` — Construye la imagen `zapar-dev`
+- `make dev` — `docker run` con montaje de `$(PWD)` y caches `pub/.dart_tool/build`; servidor HTTP en **http://localhost:8080**
+- `make dev-static` — `flutter build web --release` + `python3 -m http.server` sobre `build/web`
+- `make cache-list` — Lista caches Docker del proyecto
+- `make cache-prune` — Borra caches viejos y conserva el hash actual
+- `make cache-prune-all` — Borra todos los caches Docker del proyecto
 
 ## Orden de actualización
-Si upstream agrega dependencias de sistema nuevas o cambia la estructura de directorios, actualizar el Dockerfile acorde. Revisar `pubspec.yaml` por nuevas dependencias nativas.
-
-## Dependencias
-Ninguna. Este parche es independiente.
+Si upstream exige otra versión de Flutter/Dart, ajustar `FLUTTER_VERSION` y validar `flutter build web`.
 
 ## Criterio de éxito
-- `docker build .` completa sin errores
-- El contenedor puede ejecutar `flutter analyze` y `flutter test` correctamente
+- `docker build -t zapar-dev .` completa
+- `make dev` expone la app en el puerto 8080

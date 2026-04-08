@@ -44,6 +44,19 @@ git apply patches/NNN-nombre.patch
 
 Si falla: leer `patches/NNN-nombre.md` (fuente de verdad), alinear con upstream, actualizar el `.patch`. No omitir ningún parche.
 
+### 1.5 — Si el parche toca Docker / web dev
+
+- No asumir la versión histórica de Flutter del parche. Validar contra el **estado actual** de `master`:
+  - revisar `pubspec.yaml` / `pubspec.lock`
+  - correr `make dev` o `flutter pub get`
+  - si aparecen errores de SDK o APIs faltantes (`withValues`, clases de tema, etc.), subir `FLUTTER_VERSION` hasta una release compatible y actualizar también cualquier workflow/CI relacionado
+- Cuando el flujo Docker genere artefactos efímeros (`linux/flutter/ephemeral`, `macos/Flutter/ephemeral`, `GeneratedPluginRegistrant.swift`), el parche que agrega ese flujo debe encargarse también de `.gitignore`
+- Si esos artefactos ya estaban trackeados por error, quitarlos del índice con `git rm --cached` además de actualizar `.gitignore`
+- Para Docker lento, preferir caches grandes y seguras:
+  - imagen de toolchain separada del código
+  - BuildKit cache para `apt`
+  - volúmenes versionados por `Flutter + hash(pubspec.lock)` para `PUB_CACHE`, `.dart_tool` y `build`
+
 ### 2 — Verificar
 
 - `flutter analyze` sin errores nuevos

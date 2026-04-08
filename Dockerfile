@@ -1,39 +1,34 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
+# Imagen de toolchain Flutter para desarrollo web (código vía volumen en runtime).
 
-# Build Flutter app in container
-FROM debian:bookworm
+FROM ubuntu:22.04
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
+ARG FLUTTER_VERSION=3.27.4
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
     curl \
+    git \
+    python3 \
     unzip \
     xz-utils \
-    build-essential \
-    libglu1-mesa \
-    libstdc++-12-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Flutter SDK
-WORKDIR /opt
-RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1
-ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:$PATH"
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH="$FLUTTER_HOME/bin:$PATH"
+ENV PUB_CACHE=/var/pub-cache
 
-# Pre-download platform tooling
-RUN flutter precache
+RUN git clone --depth 1 --branch ${FLUTTER_VERSION} https://github.com/flutter/flutter.git ${FLUTTER_HOME}
 
-# Create app directory
+RUN git config --global --add safe.directory /opt/flutter
+
+RUN flutter config --no-analytics --enable-web && \
+    flutter precache --web
+
+RUN mkdir -p /var/pub-cache
 WORKDIR /app
 
-# Copy pubspec files (cache dependencies)
-COPY pubspec.yaml pubspec.lock ./
-
-# Get dependencies
-RUN flutter pub get
-
-# Copy entire app
-COPY . .
-
-# Build & run
 EXPOSE 8080
-CMD ["flutter", "run", "-d", "chrome", "--web-port=8080"]
+
+CMD ["flutter", "run", "-d", "web-server", "--web-hostname", "0.0.0.0", "--web-port", "8080", "--web-renderer", "html"]
