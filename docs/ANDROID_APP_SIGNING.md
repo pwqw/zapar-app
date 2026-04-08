@@ -1,4 +1,4 @@
-# Android App Signing - Zapar
+# Android App Signing - Koel
 
 ## Overview
 
@@ -33,11 +33,11 @@ APK firmado listo para distribución
 ### Generar un nuevo keystore
 
 ```bash
-keytool -genkey -v -keystore zapar.jks \
+keytool -genkey -v -keystore koel-upload.jks \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000 \
-  -alias zapar
+  -alias koel
 ```
 
 **Parámetros importantes:**
@@ -48,8 +48,15 @@ keytool -genkey -v -keystore zapar.jks \
 ### Codificar para GitHub Secrets
 
 ```bash
-base64 -w 0 zapar.jks > keystore-base64.txt
+base64 -w 0 koel-upload.jks > keystore-base64.txt
 ```
+
+## Package name (applicationId)
+
+Por defecto coincide con upstream: `phanan.koel.app`. Para un build con otro id (p. ej. Play Store propio), sin commitear secretos:
+
+1. **`android/local.properties`** (gitignored en `android/.gitignore`): `android.applicationId=com.tuempresa.tuapp`
+2. O raíz **`.env`** (gitignored): `ANDROID_APPLICATION_ID=com.tuempresa.tuapp` (ver `.env.example`).
 
 ## GitHub Secrets Requeridos
 
@@ -59,9 +66,9 @@ Environment: `PlayStore`
 |--------|-------------|---------|
 | `KEYSTORE_BASE64` | Keystore codificado en base64 | (output de base64) |
 | `KEYSTORE_PASSWORD` | Contraseña del keystore | `supersecret123` |
-| `KEY_ALIAS` | Alias de la clave | `zapar` |
+| `KEY_ALIAS` | Alias de la clave | `koel` |
 | `KEY_PASSWORD` | Contraseña de la clave | `supersecret456` |
-| `PACKAGE_NAME` | Package name de la app | `com.zapar.app` |
+| `PACKAGE_NAME` | Package name de la app | `phanan.koel.app` |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT` | JSON del service account de Play Store | (JSON completo) |
 
 ## Verificar la Firma de un AAB
@@ -71,7 +78,7 @@ Environment: `PlayStore`
 jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.aab
 
 # Verificar contra un keystore
-jarsigner -verify -keystore zapar.jks build/app/outputs/bundle/release/app-release.aab
+jarsigner -verify -keystore koel-upload.jks build/app/outputs/bundle/release/app-release.aab
 ```
 
 ## Troubleshooting
