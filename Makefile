@@ -1,4 +1,4 @@
-.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
+.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
 
 IMAGE_NAME := zapar-dev
 FLUTTER_VERSION := 3.27.4
@@ -33,7 +33,7 @@ dev-live: ## flutter run web-server en contenedor (puerto 8080)
 		-v $(BUILD_VOLUME):/app/build \
 		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 		$(IMAGE_NAME) \
-		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
+		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080"
 
 dev-static: ## build web + python http.server (sin hot reload)
 	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
@@ -70,6 +70,15 @@ web-build-docker:
 		$(IMAGE_NAME) \
 		sh -lc "flutter pub get && flutter build web --release"
 
+analyze-docker: ## flutter analyze en imagen zapar-dev (warnings/info no fallan el exit code)
+	docker run --rm \
+		-v $(PWD):/app \
+		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
+		-v $(BUILD_VOLUME):/app/build \
+		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
+		$(IMAGE_NAME) \
+		sh -lc "flutter pub get && flutter analyze --no-fatal-warnings --no-fatal-infos"
+
 web-serve:
 	flutter run -d web-server --web-hostname localhost --web-port=8080
 
@@ -80,7 +89,7 @@ web-serve-docker:
 		-v $(BUILD_VOLUME):/app/build \
 		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 		$(IMAGE_NAME) \
-		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
+		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080"
 
 test: ## Tests en Docker (build_runner + flutter test)
 	@docker stop $(CONTAINER_NAME_TEST) 2>/dev/null || true
