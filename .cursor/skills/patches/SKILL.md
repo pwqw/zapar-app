@@ -1,9 +1,9 @@
 ---
 name: patches
-description: Mantiene el fork Zapar sobre koel/player. Aplica, verifica, regenera y crea parches en patches/. Usar al trabajar con patches del repo Flutter, upstream/master, git apply, o cuando el usuario mencione parches Zapar/koel.
+description: Mantiene el fork sobre koel/player. Aplica, verifica, regenera y crea parches en patches/. Usar al trabajar con patches del repo Flutter, upstream/master, git apply, o cuando el usuario mencione parches del fork Koel.
 ---
 
-# patches — Mantenimiento del fork Zapar
+# patches — Mantenimiento del fork (Koel player)
 
 **Asunción**: `origin/master` y `upstream/master` ya están actualizados.
 
@@ -80,7 +80,7 @@ git tag --list 'v*' --sort=-v:refname | head -1
 Proponer `vX.Y.Z-patched` y **esperar confirmación** antes de:
 
 ```bash
-git tag -a vX.Y.Z-patched -m "Zapar fork — upstream + patches aplicados"
+git tag -a vX.Y.Z-patched -m "Koel fork — upstream + patches aplicados"
 git push origin vX.Y.Z-patched
 ```
 

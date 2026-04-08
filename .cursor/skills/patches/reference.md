@@ -66,7 +66,7 @@ git diff upstream/master -- <archivos-nuevos> > patches/NNN-<nombre>.patch
 # Parche NNN — <nombre>
 
 ## Propósito
-[Por qué Zapar necesita este parche]
+[Por qué este fork necesita el parche]
 
 ## Archivos modificados
 - `ruta/archivo.ext` — [descripción del cambio]
