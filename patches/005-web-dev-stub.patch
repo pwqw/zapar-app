@@ -1,14 +1,53 @@
+diff --git a/lib/audio_handler.dart b/lib/audio_handler.dart
+index 3f2fca6..e5cb168 100644
+--- a/lib/audio_handler.dart
++++ b/lib/audio_handler.dart
+@@ -1,10 +1,9 @@
+-import 'dart:io';
+-
+ import 'package:app/app_state.dart';
+ import 'package:app/extensions/extensions.dart';
+ import 'package:app/models/models.dart';
+ import 'package:app/providers/providers.dart';
+ import 'package:app/utils/api_request.dart';
++import 'package:app/utils/platform_compat.dart';
+ import 'package:app/utils/features.dart';
+ import 'package:app/utils/preferences.dart' as preferences;
+ import 'package:app/values/queue_state.dart';
+@@ -106,7 +105,7 @@ class KoelAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
+           // iOS 16+ seems to treat "idle" as "stopped" and close the audio
+           // session, so we use "ready" to keep it alive.
+           // @see https://stackoverflow.com/a/75236414
+-          ProcessingState.idle: Platform.isIOS
++          ProcessingState.idle: isIOSDevice
+               ? AudioProcessingState.ready
+               : AudioProcessingState.idle,
+           ProcessingState.loading: AudioProcessingState.loading,
 diff --git a/lib/audio_handler_stub.dart b/lib/audio_handler_stub.dart
 new file mode 100644
-index 0000000..2222222
+index 0000000..bd17b3b
 --- /dev/null
 +++ b/lib/audio_handler_stub.dart
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,166 @@
++import 'package:app/models/models.dart';
++import 'package:app/utils/preferences.dart' as preferences;
 +import 'package:audio_service/audio_service.dart';
++import 'package:just_audio/just_audio.dart';
 +
 +/// Stub implementation of AudioHandler para web.
 +/// En web, no se soportan APIs de audio nativas.
-+class AudioHandlerStub extends BaseAudioHandler {
++class AudioHandlerStub extends BaseAudioHandler with QueueHandler, SeekHandler {
++  final _player = AudioPlayer();
++
++  AudioPlayer get player => _player;
++
++  var _isRadioMode = false;
++  AudioPlayer? _radioPlayer;
++
++  bool get isRadioMode => _isRadioMode;
++
++  late AudioServiceRepeatMode repeatMode;
++
 +  @override
 +  Future<void> play() async {}
 +
@@ -39,7 +78,11 @@ index 0000000..2222222
 +  Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {}
 +
 +  @override
-+  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {}
++  Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
++    this.repeatMode = repeatMode;
++    playbackState.add(playbackState.value.copyWith(repeatMode: repeatMode));
++    await _player.setLoopMode(LoopMode.values[repeatMode.index]);
++  }
 +
 +  @override
 +  Future<void> customAction(String name, [Map<String, dynamic>? extras]) async {}
@@ -51,8 +94,411 @@ index 0000000..2222222
 +  Future<void> removeQueueItem(MediaItem mediaItem) async {}
 +
 +  @override
-+  Future<void> updateQueue(List<MediaItem> newQueue) async {}
++  Future<void> updateQueue(List<MediaItem> newQueue) async {
++    queue.add(newQueue);
++  }
 +
 +  @override
 +  Future<void> updateMediaItem(MediaItem mediaItem) async {}
++
++  /// Custom methods from KoelAudioHandler (required by the app)
++  Future<void> init({
++    required dynamic playableProvider,
++    required dynamic downloadProvider,
++  }) async {
++    repeatMode = preferences.repeatMode;
++    await setVolume(preferences.volume);
++  }
++
++  void enterRadioMode(AudioPlayer radioPlayer) {
++    _isRadioMode = true;
++    _radioPlayer = radioPlayer;
++    radioPlayer.setVolume(preferences.volume);
++  }
++
++  void exitRadioMode() {
++    _isRadioMode = false;
++    _radioPlayer = null;
++  }
++
++  void updateRadioPlaybackState({
++    required bool playing,
++    required AudioProcessingState processingState,
++  }) {}
++
++  void setPlaybackPositionToState(String playableId, num position) {}
++
++  void moveQueueItem(int oldIndex, int newIndex) {}
++
++  Future<void> queueAndPlay(Playable playable) async {}
++
++  Future<void> maybeQueueAndPlay(Playable playable, {position = 0}) async {}
++
++  Future<void> queueAfterCurrent(Playable playable) async {}
++
++  Future<void> playOrPause() async {
++    if (playbackState.value.playing) {
++      await pause();
++    } else {
++      await play();
++    }
++  }
++
++  Future<bool> queued(Playable playable) async => false;
++
++  Future<void> clearQueue() async {
++    await updateQueue([]);
++  }
++
++  Future<void> replaceQueue(
++    List<Playable> playables, {
++    bool shuffle = false,
++    bool autoPlay = true,
++  }) async {}
++
++  Future<void> queueToBottom(Playable playable) async {}
++
++  Future<void> removeFromQueue(Playable playable) async {}
++
++  Future<void> setVolume(double value) async {
++    await _player.setVolume(value);
++    await _radioPlayer?.setVolume(value);
++    preferences.volume = value;
++  }
++
++  Future<AudioServiceRepeatMode> rotateRepeatMode() async {
++    switch (repeatMode) {
++      case AudioServiceRepeatMode.none:
++        repeatMode = AudioServiceRepeatMode.all;
++        break;
++      case AudioServiceRepeatMode.all:
++        repeatMode = AudioServiceRepeatMode.one;
++        break;
++      default:
++        repeatMode = AudioServiceRepeatMode.none;
++        break;
++    }
++
++    preferences.repeatMode = repeatMode;
++    await setRepeatMode(repeatMode);
++
++    return repeatMode;
++  }
++
++  Future<void> cleanUpUponLogout() async {
++    await _player.stop();
++    await clearQueue();
++  }
++
++  num? getPlaybackPositionFromState(String playableId) => 0;
 +}
++
++/// Type alias for compatibility with KoelAudioHandler naming
++typedef KoelAudioHandler = AudioHandlerStub;
+diff --git a/lib/constants/images.dart b/lib/constants/images.dart
+index 7df268e..5da9cea 100644
+--- a/lib/constants/images.dart
++++ b/lib/constants/images.dart
+@@ -1,8 +1,7 @@
+-import 'dart:io';
+-
+ import 'package:flutter/cupertino.dart';
+-import 'package:flutter/services.dart';
+-import 'package:path_provider/path_provider.dart';
++
++import 'package:app/utils/default_art_uri_io.dart'
++    if (dart.library.html) 'package:app/utils/default_art_uri_web.dart' as impl;
+ 
+ class AppImages {
+   AppImages._();
+@@ -17,16 +16,10 @@ class AppImages {
+   // audio_service doesn't directly support `asset://` URIs, so we need to
+   // convert the asset to a file and use a `file://` URI instead.
+   // See: https://github.com/ryanheise/audio_service/issues/523
++  // Web: no dart:io File — notification art URI is omitted.
+   static Future<Uri?> getDefaultArtUri() async {
+     if (_defaultArtUri == null) {
+-      try {
+-        final content = await rootBundle.load(defaultImageAssetName);
+-        final bytes = content.buffer.asUint8List();
+-        final documentDir = await getApplicationDocumentsDirectory();
+-        final filePath = '${documentDir.path}/default-image.webp';
+-
+-        _defaultArtUri = (await File(filePath).writeAsBytes(bytes)).uri;
+-      } catch (_) {}
++      _defaultArtUri = await impl.materializeDefaultArtUri(defaultImageAssetName);
+     }
+ 
+     return _defaultArtUri;
+diff --git a/lib/main.dart b/lib/main.dart
+index 4affc59..a000e35 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -1,6 +1,6 @@
+ import 'dart:async';
+ 
+-import 'package:app/audio_handler.dart';
++import 'audio_handler.dart' if (dart.library.html) 'audio_handler_stub.dart';
+ import 'package:app/providers/providers.dart';
+ import 'package:app/ui/app.dart';
+ import 'package:audio_service/audio_service.dart';
+diff --git a/lib/providers/download_provider.dart b/lib/providers/download_provider.dart
+index fc72f47..3651a76 100644
+--- a/lib/providers/download_provider.dart
++++ b/lib/providers/download_provider.dart
+@@ -2,6 +2,7 @@ import 'dart:async';
+ import 'dart:io';
+ 
+ import 'package:app/mixins/stream_subscriber.dart';
++import 'package:flutter/foundation.dart';
+ import 'package:app/models/models.dart';
+ import 'package:app/providers/providers.dart';
+ import 'package:app/utils/crypto.dart';
+@@ -66,16 +67,18 @@ class DownloadProvider with StreamSubscriber {
+     final serializedPlayables =
+         _playableStorage.read<List<dynamic>>(serializedPlayableKey) ?? [];
+ 
+-    var downloadsDir = await this.downloadsDir;
++    if (!kIsWeb) {
++      var downloadsDir = await this.downloadsDir;
+ 
+-    serializedPlayables.forEach((json) {
+-      var playable = Playable.fromJson(json);
+-      final file = _localFile(downloadsDir, playable);
++      serializedPlayables.forEach((json) {
++        var playable = Playable.fromJson(json);
++        final file = _localFile(downloadsDir, playable);
+ 
+-      if (file.existsSync() && !_downloads.any((d) => d.playable == playable)) {
+-        _downloads.add(Download(playable: playable, path: file.path));
+-      }
+-    });
++        if (file.existsSync() && !_downloads.any((d) => d.playable == playable)) {
++          _downloads.add(Download(playable: playable, path: file.path));
++        }
++      });
++    }
+ 
+     _playableProvider.syncWithVault(this.playables);
+   }
+@@ -90,6 +93,8 @@ class DownloadProvider with StreamSubscriber {
+       '${preferences.host}.${preferences.userEmail}.songs';
+ 
+   Future<void> download({required Playable playable}) async {
++    if (kIsWeb) return;
++
+     var client = HttpClient();
+     var targetDir = Directory(await downloadsDir);
+ 
+diff --git a/lib/ui/screens/info_sheet/info_sheet.dart b/lib/ui/screens/info_sheet/info_sheet.dart
+index f42e412..9360cfc 100644
+--- a/lib/ui/screens/info_sheet/info_sheet.dart
++++ b/lib/ui/screens/info_sheet/info_sheet.dart
+@@ -1,11 +1,10 @@
+-import 'dart:io';
+-
+ import 'package:app/constants/constants.dart';
+ import 'package:app/models/models.dart';
+ import 'package:app/ui/screens/info_sheet/album_info_pane.dart';
+ import 'package:app/ui/screens/info_sheet/artist_info_pane.dart';
+ import 'package:app/ui/screens/info_sheet/lyrics_pane.dart';
+ import 'package:app/ui/widgets/widgets.dart' hide AppBar;
++import 'package:app/utils/platform_compat.dart';
+ import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
+ import 'package:figma_squircle/figma_squircle.dart';
+ import 'package:flutter/material.dart';
+@@ -138,7 +137,7 @@ Future<void> showInfoSheet(BuildContext context, {required Playable playable}) {
+         snapAnimationDuration: const Duration(milliseconds: 100),
+         builder: (BuildContext context, ScrollController scrollController) {
+           return ClipSmoothRect(
+-            radius: Platform.isIOS
++            radius: isIOSDevice
+                 ? SmoothBorderRadius(
+                     cornerRadius: 32,
+                     cornerSmoothing: .5,
+diff --git a/lib/ui/screens/initial.dart b/lib/ui/screens/initial.dart
+index 6a56f82..09981e3 100644
+--- a/lib/ui/screens/initial.dart
++++ b/lib/ui/screens/initial.dart
+@@ -4,6 +4,7 @@ import 'package:app/ui/screens/screens.dart';
+ import 'package:app/ui/widgets/widgets.dart';
+ import 'package:connectivity_plus/connectivity_plus.dart';
+ import 'package:flutter/cupertino.dart';
++import 'package:flutter/foundation.dart';
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ 
+@@ -21,15 +22,19 @@ class _InitialScreenState extends State<InitialScreen> with StreamSubscriber {
+   void initState() {
+     super.initState();
+ 
+-    Connectivity().checkConnectivity().then((value) {
+-      if (value == ConnectivityResult.none) {
+-        Navigator.of(context).pushReplacementNamed(
+-          NoConnectionScreen.routeName,
+-        );
+-      } else {
+-        _resolveAuthenticatedUser();
+-      }
+-    });
++    if (kIsWeb) {
++      _resolveAuthenticatedUser();
++    } else {
++      Connectivity().checkConnectivity().then((value) {
++        if (value == ConnectivityResult.none) {
++          Navigator.of(context).pushReplacementNamed(
++            NoConnectionScreen.routeName,
++          );
++        } else {
++          _resolveAuthenticatedUser();
++        }
++      });
++    }
+   }
+ 
+   Future<void> _resolveAuthenticatedUser() async {
+diff --git a/lib/ui/screens/main.dart b/lib/ui/screens/main.dart
+index 6c053c1..f0d329b 100644
+--- a/lib/ui/screens/main.dart
++++ b/lib/ui/screens/main.dart
+@@ -1,5 +1,3 @@
+-import 'dart:io';
+-
+ import 'package:app/app_state.dart';
+ import 'package:app/constants/constants.dart';
+ import 'package:app/enums.dart';
+@@ -8,6 +6,7 @@ import 'package:app/mixins/stream_subscriber.dart';
+ import 'package:app/providers/providers.dart';
+ import 'package:app/ui/screens/screens.dart';
+ import 'package:app/ui/widgets/widgets.dart';
++import 'package:app/utils/platform_compat.dart';
+ import 'package:connectivity_plus/connectivity_plus.dart';
+ import 'package:flutter/cupertino.dart';
+ import 'package:flutter/material.dart';
+@@ -169,7 +168,7 @@ class _ConnectivityInfoBoxState extends State<ConnectivityInfoBox>
+ 
+   @override
+   Widget build(BuildContext context) {
+-    var padding = EdgeInsets.only(top: 16, bottom: Platform.isIOS ? 32 : 16);
++    var padding = EdgeInsets.only(top: 16, bottom: isIOSDevice ? 32 : 16);
+ 
+     return FrostedGlassBackground(
+       child: Container(
+diff --git a/lib/ui/theme_data.dart b/lib/ui/theme_data.dart
+index b12a4be..583da25 100644
+--- a/lib/ui/theme_data.dart
++++ b/lib/ui/theme_data.dart
+@@ -1,6 +1,5 @@
+-import 'dart:io';
+-
+ import 'package:app/constants/constants.dart';
++import 'package:app/utils/platform_compat.dart';
+ import 'package:app/utils/full_width_slider_track_shape.dart';
+ import 'package:figma_squircle/figma_squircle.dart';
+ import 'package:flutter/material.dart';
+@@ -25,7 +24,7 @@ ThemeData themeData(BuildContext context) {
+     ),
+     bottomSheetTheme: BottomSheetThemeData(
+       backgroundColor: AppColors.black.withOpacity(.3),
+-      shape: Platform.isIOS
++      shape: isIOSDevice
+           ? SmoothRectangleBorder(
+               borderRadius: SmoothBorderRadius(
+                 cornerRadius: 32,
+diff --git a/lib/utils/api_request.dart b/lib/utils/api_request.dart
+index 094dcfa..03aa25a 100644
+--- a/lib/utils/api_request.dart
++++ b/lib/utils/api_request.dart
+@@ -1,5 +1,4 @@
+ import 'dart:convert';
+-import 'dart:io';
+ 
+ import 'package:app/exceptions/exceptions.dart';
+ import 'package:app/utils/preferences.dart' as preferences;
+@@ -16,12 +15,12 @@ Future<dynamic> request(
+ 
+   Uri uri = Uri.parse('${preferences.apiBaseUrl}/$path');
+ 
++  const jsonMime = 'application/json';
+   Map<String, String> headers = {
+-    HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
+-    HttpHeaders.acceptHeader: ContentType.json.mimeType,
++    'Content-Type': jsonMime,
++    'Accept': jsonMime,
+     'X-Api-Version': preferences.apiVersion,
+-    if (preferences.apiToken != null)
+-      HttpHeaders.authorizationHeader: 'Bearer ${preferences.apiToken}',
++    if (preferences.apiToken != null) 'Authorization': 'Bearer ${preferences.apiToken}',
+   };
+ 
+   switch (method) {
+diff --git a/lib/utils/default_art_uri_io.dart b/lib/utils/default_art_uri_io.dart
+new file mode 100644
+index 0000000..f377bed
+--- /dev/null
++++ b/lib/utils/default_art_uri_io.dart
+@@ -0,0 +1,17 @@
++import 'dart:io';
++
++import 'package:flutter/services.dart';
++import 'package:path_provider/path_provider.dart';
++
++Future<Uri?> materializeDefaultArtUri(String assetName) async {
++  try {
++    final content = await rootBundle.load(assetName);
++    final bytes = content.buffer.asUint8List();
++    final documentDir = await getApplicationDocumentsDirectory();
++    final filePath = '${documentDir.path}/default-image.webp';
++
++    return (await File(filePath).writeAsBytes(bytes)).uri;
++  } catch (_) {
++    return null;
++  }
++}
+diff --git a/lib/utils/default_art_uri_web.dart b/lib/utils/default_art_uri_web.dart
+new file mode 100644
+index 0000000..5932421
+--- /dev/null
++++ b/lib/utils/default_art_uri_web.dart
+@@ -0,0 +1 @@
++Future<Uri?> materializeDefaultArtUri(String assetName) async => null;
+diff --git a/lib/utils/platform_compat.dart b/lib/utils/platform_compat.dart
+new file mode 100644
+index 0000000..2398942
+--- /dev/null
++++ b/lib/utils/platform_compat.dart
+@@ -0,0 +1,5 @@
++import 'package:flutter/foundation.dart';
++
++/// Reemplazo seguro para [Platform.isIOS] de `dart:io` (no disponible en web).
++bool get isIOSDevice =>
++    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+diff --git a/web/index.html b/web/index.html
+new file mode 100644
+index 0000000..7f66459
+--- /dev/null
++++ b/web/index.html
+@@ -0,0 +1,23 @@
++<!DOCTYPE html>
++<html>
++<head>
++    <base href="$FLUTTER_BASE_HREF">
++
++    <meta charset="UTF-8">
++    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
++    <meta name="description" content="Koel music streaming application.">
++
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <meta name="apple-mobile-web-app-capable" content="yes">
++    <meta name="apple-mobile-web-app-status-bar-style" content="black">
++    <meta name="apple-mobile-web-app-title" content="Koel">
++    <link rel="apple-touch-icon" href="icons/Icon-192.png">
++
++    <title>Koel</title>
++    <link rel="manifest" href="manifest.json">
++    <link rel="icon" type="image/png" href="favicon.png"/>
++</head>
++<body>
++  <script src="flutter_bootstrap.js" async></script>
++</body>
++</html>

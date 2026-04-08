@@ -1,39 +1,13 @@
 diff --git a/android/app/build.gradle b/android/app/build.gradle
-index 1234567..abcdefg 100644
+index 7f4d5a2..76f4edc 100644
 --- a/android/app/build.gradle
 +++ b/android/app/build.gradle
-@@ -5,6 +5,24 @@ if (flutterRoot == null) {
- apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
- android {
-+    def keystoreProperties = new Properties()
-+    def keystorePropertiesFile = rootProject.file('key.properties')
-+    if (keystorePropertiesFile.exists()) {
-+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-+    }
-+
-+    signingConfigs {
-+        release {
-+            keyAlias keystoreProperties['keyAlias']
-+            keyPassword keystoreProperties['keyPassword']
-+            storeFile keystoreProperties['storeFile'] ? file(keystorePropertiesFile.parent + File.separator + keystoreProperties['storeFile']) : null
-+            storePassword keystoreProperties['storePassword']
-+        }
-+    }
-+
-     compileSdk flutter.compileSdkVersion
-     ndkVersion flutter.ndkVersion
-
-@@ -20,7 +38,7 @@ android {
-         applicationId "com.zapar.app"
-         minSdk flutter.minSdkVersion
-         targetSdk flutter.targetSdkVersion
-         versionCode flutterVersionCode.toInteger()
-         versionName flutterVersionName
-         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-@@ -40,6 +58,7 @@ android {
-         release {
-             signingConfig signingConfigs.release
-         }
+@@ -46,7 +46,7 @@ android {
      }
- }
+ 
+     defaultConfig {
+-        applicationId "phanan.koel.app"
++        applicationId "com.zapar.app"
+         // You can update the following values to match your application needs.
+         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+         minSdkVersion flutter.minSdkVersion

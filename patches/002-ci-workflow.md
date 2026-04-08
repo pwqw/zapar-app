@@ -4,8 +4,8 @@
 Pipeline de CI que compila el AAB de Android firmado y lo publica a Google Play Store (beta track). Incluye workflow de CI básico para PRs y uno de build+deploy para tags/releases.
 
 ## Archivos afectados
-- `.github/workflows/build-deploy.yml` — Pipeline principal: build AAB firmado + upload a Play Store
-- `.github/workflows/ci.yml` — CI básico para PRs (analyze + test)
+- `.github/workflows/build-deploy.yml` — Pipeline principal: build AAB firmado + upload a Play Store + release GitHub (`softprops/action-gh-release`)
+- `.github/workflows/ci.yml` — CI para PRs/push (analyze + test); convive con `unit.yml` de upstream (no se modifica aquí)
 
 ## Orden de construcción (desde upstream/master limpio)
 
@@ -28,7 +28,7 @@ Pipeline de CI que compila el AAB de Android firmado y lo publica a Google Play 
         - `serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}`
         - `packageName: ${{ secrets.PACKAGE_NAME }}`
         - track: beta
-     h. Crear GitHub Release con el AAB adjunto
+     h. Crear GitHub Release (`softprops/action-gh-release`) con el tag
 
 3. Secrets requeridos (documentar en el .md, NO incluir valores):
    - `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`

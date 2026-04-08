@@ -22,10 +22,10 @@ index 0000000..a934970
 +*.swp
 +*.log
 diff --git a/.gitignore b/.gitignore
-index cc95d74..35476f9 100644
+index cc95d74..dbd163b 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -31,6 +31,9 @@
+@@ -31,9 +31,11 @@
  .pub/
  /build/
  /ios/build/
@@ -34,7 +34,10 @@ index cc95d74..35476f9 100644
 +/macos/Flutter/GeneratedPluginRegistrant.swift
  
  # Web related
- lib/generated_plugin_registrant.dart
+-lib/generated_plugin_registrant.dart
+ 
+ # Symbolication related
+ app.*.symbols
 diff --git a/Dockerfile b/Dockerfile
 new file mode 100644
 index 0000000..10aa64f
@@ -77,11 +80,11 @@ index 0000000..10aa64f
 +CMD ["flutter", "run", "-d", "web-server", "--web-hostname", "0.0.0.0", "--web-port", "8080", "--web-renderer", "html"]
 diff --git a/Makefile b/Makefile
 new file mode 100644
-index 0000000..2d123c9
+index 0000000..10ba38e
 --- /dev/null
 +++ b/Makefile
-@@ -0,0 +1,121 @@
-+.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
+@@ -0,0 +1,130 @@
++.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
 +
 +IMAGE_NAME := zapar-dev
 +FLUTTER_VERSION := 3.27.4
@@ -116,7 +119,7 @@ index 0000000..2d123c9
 +		-v $(BUILD_VOLUME):/app/build \
 +		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 +		$(IMAGE_NAME) \
-+		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
++		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080"
 +
 +dev-static: ## build web + python http.server (sin hot reload)
 +	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
@@ -153,6 +156,15 @@ index 0000000..2d123c9
 +		$(IMAGE_NAME) \
 +		sh -lc "flutter pub get && flutter build web --release"
 +
++analyze-docker: ## flutter analyze en imagen zapar-dev (warnings/info no fallan el exit code)
++	docker run --rm \
++		-v $(PWD):/app \
++		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
++		-v $(BUILD_VOLUME):/app/build \
++		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
++		$(IMAGE_NAME) \
++		sh -lc "flutter pub get && flutter analyze --no-fatal-warnings --no-fatal-infos"
++
 +web-serve:
 +	flutter run -d web-server --web-hostname localhost --web-port=8080
 +
@@ -163,7 +175,7 @@ index 0000000..2d123c9
 +		-v $(BUILD_VOLUME):/app/build \
 +		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 +		$(IMAGE_NAME) \
-+		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080 --web-renderer html"
++		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080"
 +
 +test: ## Tests en Docker (build_runner + flutter test)
 +	@docker stop $(CONTAINER_NAME_TEST) 2>/dev/null || true

@@ -12,7 +12,7 @@ Cada parche es un archivo `.patch` (generado con `git format-patch`) acompañado
 |---|---------|-------------|--------------|
 | 001 | `001-docker-dev.patch` | Dockerfile y .dockerignore para desarrollo local | ninguna |
 | 002 | `002-ci-workflow.patch` | GitHub Actions: CI + build + deploy a Play Store | ninguna |
-| 003 | `003-android-signing.patch` | Gradle: applicationId configurable, minSdk, firma release | ninguna |
+| 003 | `003-android-signing.patch` | `applicationId` Zapar (`com.zapar.app`); firma ya en upstream | ninguna |
 | 004 | `004-android-signing-docs.patch` | Documentación de Play Store signing | 003 |
 | 005 | `005-web-dev-stub.patch` | Makefile + audio stub + guards kIsWeb para dev en navegador | ninguna |
 
