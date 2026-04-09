@@ -7,7 +7,7 @@ import 'package:native_qr/native_qr.dart';
 class QrLoginButton extends StatelessWidget {
   const QrLoginButton({Key? key, required this.onResult}) : super(key: key);
 
-  final Function({required String host, required String token}) onResult;
+  final Function({required String token}) onResult;
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +40,7 @@ class QrLoginButton extends StatelessWidget {
             Codec<String, String> stringToBase64 = utf8.fuse(base64);
             var decodedPayload = stringToBase64.decode(payload);
             var payloadJson = jsonDecode(decodedPayload);
-            onResult(
-              host: payloadJson['host'],
-              token: payloadJson['token'],
-            );
+            onResult(token: payloadJson['token']);
           }
         } catch (err) {
           print(err);

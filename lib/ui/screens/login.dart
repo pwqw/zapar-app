@@ -21,6 +21,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+  static const _host = 'https://zap.ar';
+
   final formKey = GlobalKey<FormState>();
   var _authenticating = false;
   var _showPassword = false;
@@ -28,7 +30,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
 
   late String _email;
   late String _password;
-  late String _host;
 
   @override
   void initState() {
@@ -37,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
 
     // Try looking for stored values in local storage
     setState(() {
-      _host = preferences.host ?? '';
       _email = preferences.userEmail ?? '';
     });
   }
@@ -67,16 +67,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     );
   }
 
-  String standardizeHost(String host) {
-    host = host.trim().replaceAll(RegExp(r'/+$'), '');
-
-    if (!host.startsWith("http://") && !host.startsWith("https://")) {
-      host = "https://" + host;
-    }
-
-    return host;
-  }
-
   void redirectToDataLoadingScreen() {
     Navigator.of(
       context,
@@ -94,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     setState(() => _authenticating = true);
 
     try {
-      _host = standardizeHost(_host);
       await _auth.login(host: _host, email: _email, password: _password);
       await _auth.tryGetAuthUser();
       successful = true;
@@ -119,15 +108,13 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
   }
 
   Future<void> attemptLoginWithOtp({
-    required String host,
     required String token,
   }) async {
     var successful = false;
     setState(() => _authenticating = true);
 
     try {
-      host = standardizeHost(host);
-      await _auth.loginWithOneTimeToken(host: host, token: token);
+      await _auth.loginWithOneTimeToken(host: _host, token: token);
       await _auth.tryGetAuthUser();
       successful = true;
     } on HttpResponseException catch (error) {
@@ -143,7 +130,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     }
 
     if (successful) {
-      preferences.host = host;
       redirectToDataLoadingScreen();
     }
   }
@@ -167,19 +153,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                 children: <Widget>[
                   ...[
                     Image.asset('assets/images/logo.png', width: 160),
-                    TextFormField(
-                      keyboardType: TextInputType.url,
-                      autocorrect: false,
-                      autofillHints: null,
-                      onChanged: (value) => _host = value,
-                      onSaved: (value) => _host = value ?? '',
-                      decoration: InputDecoration(
-                        labelText: 'Host',
-                        hintText: 'https://www.koel.music',
-                      ),
-                      controller: TextEditingController(text: _host),
-                      validator: requireValue,
-                    ),
                     TextFormField(
                       keyboardType: TextInputType.emailAddress,
                       autocorrect: false,
@@ -229,11 +202,8 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                     _authenticating
                         ? SizedBox()
                         : QrLoginButton(
-                            onResult: ({
-                              required String host,
-                              required String token,
-                            }) {
-                              attemptLoginWithOtp(host: host, token: token);
+                            onResult: ({required String token}) {
+                              attemptLoginWithOtp(token: token);
                             },
                           ),
                   ].expand((widget) => [widget, const SizedBox(height: 12)]),
