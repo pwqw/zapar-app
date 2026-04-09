@@ -52,13 +52,18 @@ jobs:
           $VERSION_NAME
           EOF
 
-          if (( 10#$MAJOR > 99 || 10#$MINOR > 99 || 10#$PATCH > 99 )); then
-            echo "Version segments must stay within 0-99: $VERSION_NAME" >&2
+          if (( 10#$MAJOR > 9 || 10#$MINOR > 99 || 10#$PATCH > 99 )); then
+            echo "Version segments must stay within 0-9 / 0-99 / 0-99: $VERSION_NAME" >&2
             exit 1
           fi
 
-          SEMANTIC_CODE=$((10#$MAJOR * 10000000 + 10#$MINOR * 100000 + 10#$PATCH * 1000))
-          BUILD_SEQUENCE=$((((10#$GITHUB_RUN_NUMBER - 1) % 999) + 1))
+          if (( 10#$GITHUB_RUN_NUMBER > 9999 )); then
+            echo "GITHUB_RUN_NUMBER exceeds reserved 4-digit build space: $GITHUB_RUN_NUMBER" >&2
+            exit 1
+          fi
+
+          SEMANTIC_CODE=$((10#$MAJOR * 100000000 + 10#$MINOR * 1000000 + 10#$PATCH * 10000))
+          BUILD_SEQUENCE=$((10#$GITHUB_RUN_NUMBER))
 
           VERSION_CODE=$((SEMANTIC_CODE + BUILD_SEQUENCE))
 
