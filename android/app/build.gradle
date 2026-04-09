@@ -55,7 +55,7 @@ if (resolvedApplicationId == null) {
     }
 }
 if (resolvedApplicationId == null || resolvedApplicationId.isEmpty()) {
-    resolvedApplicationId = 'phanan.koel.app'
+    resolvedApplicationId = 'ar.zap.app'
 }
 
 android {
