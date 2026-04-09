@@ -1,4 +1,4 @@
-.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell cache-list cache-prune cache-prune-all
+.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell reload restart cache-list cache-prune cache-prune-all
 
 -include .env
 
@@ -28,9 +28,9 @@ docker-build: build ## Alias
 
 dev: dev-live ## Servidor HTTP en Docker (hot reload). http://localhost:8080
 
-dev-live: ## flutter run web-server en contenedor (puerto 8080)
+dev-live: ## flutter run web-server en contenedor (puerto 8080, hot reload con r/R)
 	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
-	docker run --rm \
+	docker run --rm -it \
 		--name $(CONTAINER_NAME_DEV) \
 		-p 8080:8080 \
 		-v $(PWD):/app \
@@ -39,6 +39,18 @@ dev-live: ## flutter run web-server en contenedor (puerto 8080)
 		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 		$(IMAGE_NAME) \
 		sh -lc "flutter pub get && flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080"
+
+reload: ## Hot reload desde otra terminal (señal SIGUSR1 al proceso flutter)
+	@PID=$$(docker exec $(CONTAINER_NAME_DEV) pgrep -f "flutter run" 2>/dev/null) && \
+		docker exec $(CONTAINER_NAME_DEV) kill -USR1 $$PID && \
+		echo "Hot reload enviado (PID $$PID)" || \
+		echo "No encontré el proceso flutter. ¿Está corriendo make dev?"
+
+restart: ## Hot restart desde otra terminal (señal SIGUSR2 al proceso flutter)
+	@PID=$$(docker exec $(CONTAINER_NAME_DEV) pgrep -f "flutter run" 2>/dev/null) && \
+		docker exec $(CONTAINER_NAME_DEV) kill -USR2 $$PID && \
+		echo "Hot restart enviado (PID $$PID)" || \
+		echo "No encontré el proceso flutter. ¿Está corriendo make dev?"
 
 dev-static: ## build web + python http.server (sin hot reload)
 	@docker stop $(CONTAINER_NAME_DEV) 2>/dev/null || true
