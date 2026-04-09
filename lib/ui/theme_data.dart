@@ -21,6 +21,10 @@ ThemeData themeData(BuildContext context) {
     scaffoldBackgroundColor: Colors.transparent,
     colorScheme: ColorScheme.dark(
       surface: AppColors.background,
+      primary: AppColors.highlight,
+      onPrimary: Colors.black,
+      secondary: AppColors.highlight,
+      onSecondary: Colors.black,
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: AppColors.black.withOpacity(.3),
