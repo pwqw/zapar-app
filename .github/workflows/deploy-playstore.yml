@@ -1,11 +1,12 @@
 name: Deploy to Play Store
 
 on:
-  workflow_run:
-    workflows:
-      - Build & Release
-    types:
-      - completed
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag (e.g. v35)
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       tag:
@@ -14,52 +15,29 @@ on:
         type: string
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
   resolve_release_tag:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.release_tag.outputs.value }}
     steps:
       - name: Resolve release tag
         id: release_tag
-        env:
-          GH_TOKEN: ${{ github.token }}
-          INPUT_TAG: ${{ github.event.inputs.tag }}
-          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
-          RELEASE_TAG=''
-
-          if [ -n "$INPUT_TAG" ]; then
-            RELEASE_TAG="$INPUT_TAG"
+          if [ "${{ github.event_name }}" = "workflow_call" ]; then
+            TAG='${{ inputs.tag }}'
+          else
+            TAG='${{ github.event.inputs.tag }}'
           fi
 
-          if [ -z "$RELEASE_TAG" ] && [ -n "$WORKFLOW_RUN_ID" ]; then
-            if gh run download "$WORKFLOW_RUN_ID" \
-              --name release-metadata \
-              --dir release-metadata; then
-              if [ -f release-metadata/release-tag.txt ]; then
-                RELEASE_TAG="$(tr -d '\n' < release-metadata/release-tag.txt)"
-              fi
-            fi
-          fi
-
-          if [ -z "$RELEASE_TAG" ]; then
-            echo "Unable to determine release tag." >&2
-            exit 1
-          fi
-
-          case "$RELEASE_TAG" in
+          case "$TAG" in
             v*)
-              echo "value=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+              echo "value=$TAG" >> "$GITHUB_OUTPUT"
               ;;
             *)
-              echo "Invalid release tag: $RELEASE_TAG" >&2
+              echo "Invalid release tag: $TAG" >&2
               exit 1
               ;;
           esac

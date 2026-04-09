@@ -85,11 +85,9 @@ jobs:
           --title "Release ${{ github.ref_name }}"
           --verify-tag
 
-      - name: Persist release tag
-        run: echo "${{ github.ref_name }}" > release-tag.txt
-
-      - name: Upload release metadata
-        uses: actions/upload-artifact@v6
-        with:
-          name: release-metadata
-          path: release-tag.txt
+  deploy_playstore:
+    needs: build_release
+    uses: ./.github/workflows/deploy-playstore.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets: inherit
