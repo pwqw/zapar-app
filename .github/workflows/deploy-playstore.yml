@@ -1,0 +1,66 @@
+name: Deploy to Play Store
+
+on:
+  workflow_run:
+    workflows:
+      - Build & Release
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy (for example v2.2.5)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: playstore-${{ github.event.inputs.tag || github.event.workflow_run.head_branch || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  deploy_playstore:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v'))
+    runs-on: ubuntu-latest
+    environment: PlayStore
+    steps:
+      - name: Resolve release tag
+        id: release_tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          WORKFLOW_TAG: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            echo "value=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "$WORKFLOW_TAG" ]; then
+            echo "value=$WORKFLOW_TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Unable to determine release tag." >&2
+          exit 1
+
+      - name: Download release bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ steps.release_tag.outputs.value }}" \
+            --pattern 'app-release.aab' \
+            --dir release-assets
+
+      - name: Upload to Play Store (beta)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: ${{ secrets.PACKAGE_NAME }}
+          releaseFiles: release-assets/app-release.aab
+          track: beta
+          status: completed
