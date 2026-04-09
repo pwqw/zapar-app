@@ -17,6 +17,7 @@ Overrides locales (Docker, `applicationId`, etc.) van en **`.env`** (ver `.env.e
 | 003 | `003-android-signing.patch` | `applicationId` desde `local.properties` / `.env`; por defecto `phanan.koel.app` | ninguna |
 | 004 | `004-android-signing-docs.patch` | Documentación de Play Store signing | 003 |
 | 005 | `005-web-dev-stub.patch` | Makefile + audio stub + guards kIsWeb para dev en navegador | ninguna |
+| 006 | `006-zapar-branding.patch` | Marca Zapar (tema, assets, Android id, login fijo `zap.ar`, QR sin host) | 003, 005 |
 
 ## Flujo de aplicación
 

@@ -1,0 +1,589 @@
+diff --git a/.env.example b/.env.example
+index 3e5ab6b..51c0a7c 100644
+--- a/.env.example
++++ b/.env.example
+@@ -2,7 +2,7 @@
+ # Valores por defecto alineados con upstream Koel; personaliza solo lo necesario.
+ 
+ # Android package id (también puedes usar android/applicationId en android/local.properties)
+-ANDROID_APPLICATION_ID=phanan.koel.app
++ANDROID_APPLICATION_ID=ar.zap.app
+ 
+ # Docker / Makefile (prefijo coherente con volúmenes en targets cache-*)
+ IMAGE_NAME=koel-dev
+diff --git a/.flutter b/.flutter
+deleted file mode 160000
+index 4d9e56e..0000000
+--- a/.flutter
++++ /dev/null
+@@ -1 +0,0 @@
+-Subproject commit 4d9e56e694b656610ab87fcf2efbcd226e0ed8cf
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index ad26b08..bd7b788 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -55,7 +55,7 @@ if (resolvedApplicationId == null) {
+     }
+ }
+ if (resolvedApplicationId == null || resolvedApplicationId.isEmpty()) {
+-    resolvedApplicationId = 'phanan.koel.app'
++    resolvedApplicationId = 'ar.zap.app'
+ }
+ 
+ android {
+diff --git a/android/app/src/debug/AndroidManifest.xml b/android/app/src/debug/AndroidManifest.xml
+index bbbe671..e24d178 100644
+--- a/android/app/src/debug/AndroidManifest.xml
++++ b/android/app/src/debug/AndroidManifest.xml
+@@ -1,4 +1,4 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="phanan.koel.app">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ar.zap.app">
+     <!-- Flutter needs it to communicate with the running application
+          to allow setting breakpoints, to provide hot reload, etc.
+     -->
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 1352172..ba22885 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -1,7 +1,7 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="phanan.koel.app">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ar.zap.app">
+ 
+     <application
+-        android:label="Koel"
++        android:label="Zapar"
+         android:icon="@mipmap/ic_launcher"
+         android:usesCleartextTraffic="true"
+         android:enableOnBackInvokedCallback="true">
+diff --git a/android/app/src/main/kotlin/phanan/koel/app/MainActivity.kt b/android/app/src/main/kotlin/phanan/koel/app/MainActivity.kt
+index 824395e..9f71f03 100644
+--- a/android/app/src/main/kotlin/phanan/koel/app/MainActivity.kt
++++ b/android/app/src/main/kotlin/phanan/koel/app/MainActivity.kt
+@@ -1,4 +1,4 @@
+-package phanan.koel.app
++package ar.zap.app
+ 
+ import android.os.Build
+ import android.os.Bundle
+diff --git a/android/app/src/main/res/mipmap-hdpi/ic_launcher.png b/android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+index 8e3e0ac..e58afad 100644
+Binary files a/android/app/src/main/res/mipmap-hdpi/ic_launcher.png and b/android/app/src/main/res/mipmap-hdpi/ic_launcher.png differ
+diff --git a/android/app/src/main/res/mipmap-mdpi/ic_launcher.png b/android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+index ecc1a69..a7a21d7 100644
+Binary files a/android/app/src/main/res/mipmap-mdpi/ic_launcher.png and b/android/app/src/main/res/mipmap-mdpi/ic_launcher.png differ
+diff --git a/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png b/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+index 60cdd38..7e270e3 100644
+Binary files a/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png and b/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png differ
+diff --git a/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png b/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+index 0d345cb..28dc632 100644
+Binary files a/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png and b/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png differ
+diff --git a/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png b/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+index 055b1b4..673e346 100644
+Binary files a/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png and b/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png differ
+diff --git a/android/app/src/profile/AndroidManifest.xml b/android/app/src/profile/AndroidManifest.xml
+index d69dd39..ebb5314 100644
+--- a/android/app/src/profile/AndroidManifest.xml
++++ b/android/app/src/profile/AndroidManifest.xml
+@@ -1,4 +1,4 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="phanan.koel.app">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ar.zap.app">
+     <!-- The INTERNET permission is required for development. Specifically,
+          the Flutter tool needs it to communicate with the running application
+          to allow setting breakpoints, to provide hot reload, etc.
+diff --git a/android/build.gradle b/android/build.gradle
+index fa6c476..aea47f8 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -9,7 +9,7 @@ allprojects {
+             if (project.hasProperty('android')) {
+                 project.android {
+                     if (namespace == null) {
+-                        namespace 'phanan.koel.app'
++                        namespace 'ar.zap.app'
+                     }
+                 }
+             }
+diff --git a/assets/images/2.0x/logo.png b/assets/images/2.0x/logo.png
+index 58b0efd..324c3e4 100644
+Binary files a/assets/images/2.0x/logo.png and b/assets/images/2.0x/logo.png differ
+diff --git a/assets/images/3.0x/logo.png b/assets/images/3.0x/logo.png
+index b7fe2f7..324c3e4 100644
+Binary files a/assets/images/3.0x/logo.png and b/assets/images/3.0x/logo.png differ
+diff --git a/assets/images/background.webp b/assets/images/background.webp
+index fc65242..8167e9b 100644
+Binary files a/assets/images/background.webp and b/assets/images/background.webp differ
+diff --git a/assets/images/default-image.webp b/assets/images/default-image.webp
+index a73e395..01bdcb0 100644
+Binary files a/assets/images/default-image.webp and b/assets/images/default-image.webp differ
+diff --git a/assets/images/logo.png b/assets/images/logo.png
+index b0b1fd4..324c3e4 100644
+Binary files a/assets/images/logo.png and b/assets/images/logo.png differ
+diff --git a/lib/constants/colors.dart b/lib/constants/colors.dart
+index f7b8b57..d3e1b13 100644
+--- a/lib/constants/colors.dart
++++ b/lib/constants/colors.dart
+@@ -5,13 +5,13 @@ class AppColors {
+ 
+   static const black = const Color(0xFF181818);
+   static const white = const Color(0xFFFFFFFF);
+-  static const red = const Color(0xFFBB0054);
++  static const red = const Color(0xFFBF2043);
+ 
+   static const text = Color.fromRGBO(255, 255, 255, .9);
+   static const background = AppColors.black;
+-  static const highlight = const Color(0xFFF80A95);
+-  static const highlightAccent = const Color(0xFFC20C75);
++  static const highlight = const Color(0xFF19D163);
++  static const highlightAccent = const Color(0xFF14A84F);
+ 
+   static const staticScreenHeaderBackground = Colors.transparent;
+-  static const flexibleScreenHeaderBackground = Color.fromRGBO(25, 0, 64, .5);
++  static const flexibleScreenHeaderBackground = Color.fromRGBO(0, 30, 15, .5);
+ }
+diff --git a/lib/ui/screens/login.dart b/lib/ui/screens/login.dart
+index e7ece1a..777c909 100644
+--- a/lib/ui/screens/login.dart
++++ b/lib/ui/screens/login.dart
+@@ -21,6 +21,8 @@ class LoginScreen extends StatefulWidget {
+ }
+ 
+ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
++  static const _host = 'https://zap.ar';
++
+   final formKey = GlobalKey<FormState>();
+   var _authenticating = false;
+   var _showPassword = false;
+@@ -28,7 +30,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+ 
+   late String _email;
+   late String _password;
+-  late String _host;
+ 
+   @override
+   void initState() {
+@@ -37,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+ 
+     // Try looking for stored values in local storage
+     setState(() {
+-      _host = preferences.host ?? '';
+       _email = preferences.userEmail ?? '';
+     });
+   }
+@@ -67,16 +67,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+     );
+   }
+ 
+-  String standardizeHost(String host) {
+-    host = host.trim().replaceAll(RegExp(r'/+$'), '');
+-
+-    if (!host.startsWith("http://") && !host.startsWith("https://")) {
+-      host = "https://" + host;
+-    }
+-
+-    return host;
+-  }
+-
+   void redirectToDataLoadingScreen() {
+     Navigator.of(
+       context,
+@@ -94,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+     setState(() => _authenticating = true);
+ 
+     try {
+-      _host = standardizeHost(_host);
+       await _auth.login(host: _host, email: _email, password: _password);
+       await _auth.tryGetAuthUser();
+       successful = true;
+@@ -119,15 +108,13 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+   }
+ 
+   Future<void> attemptLoginWithOtp({
+-    required String host,
+     required String token,
+   }) async {
+     var successful = false;
+     setState(() => _authenticating = true);
+ 
+     try {
+-      host = standardizeHost(host);
+-      await _auth.loginWithOneTimeToken(host: host, token: token);
++      await _auth.loginWithOneTimeToken(host: _host, token: token);
+       await _auth.tryGetAuthUser();
+       successful = true;
+     } on HttpResponseException catch (error) {
+@@ -143,7 +130,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+     }
+ 
+     if (successful) {
+-      preferences.host = host;
+       redirectToDataLoadingScreen();
+     }
+   }
+@@ -167,19 +153,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+                 children: <Widget>[
+                   ...[
+                     Image.asset('assets/images/logo.png', width: 160),
+-                    TextFormField(
+-                      keyboardType: TextInputType.url,
+-                      autocorrect: false,
+-                      autofillHints: null,
+-                      onChanged: (value) => _host = value,
+-                      onSaved: (value) => _host = value ?? '',
+-                      decoration: InputDecoration(
+-                        labelText: 'Host',
+-                        hintText: 'https://www.koel.music',
+-                      ),
+-                      controller: TextEditingController(text: _host),
+-                      validator: requireValue,
+-                    ),
+                     TextFormField(
+                       keyboardType: TextInputType.emailAddress,
+                       autocorrect: false,
+@@ -229,11 +202,8 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+                     _authenticating
+                         ? SizedBox()
+                         : QrLoginButton(
+-                            onResult: ({
+-                              required String host,
+-                              required String token,
+-                            }) {
+-                              attemptLoginWithOtp(host: host, token: token);
++                            onResult: ({required String token}) {
++                              attemptLoginWithOtp(token: token);
+                             },
+                           ),
+                   ].expand((widget) => [widget, const SizedBox(height: 12)]),
+diff --git a/lib/ui/screens/radio_stations.dart b/lib/ui/screens/radio_stations.dart
+index aaee25c..fc2df48 100644
+--- a/lib/ui/screens/radio_stations.dart
++++ b/lib/ui/screens/radio_stations.dart
+@@ -453,7 +453,7 @@ class _RadioStationRow extends StatelessWidget {
+                       Container(
+                         width: 40,
+                         height: 40,
+-                        color: const Color(0xFF410928).withOpacity(.7),
++                        color: const Color(0xFF082814).withOpacity(.7),
+                       ),
+                       if (radioPlayer.loading || radioPlayer.playing)
+                         Center(
+diff --git a/lib/ui/theme_data.dart b/lib/ui/theme_data.dart
+index 583da25..69ae4b9 100644
+--- a/lib/ui/theme_data.dart
++++ b/lib/ui/theme_data.dart
+@@ -21,6 +21,10 @@ ThemeData themeData(BuildContext context) {
+     scaffoldBackgroundColor: Colors.transparent,
+     colorScheme: ColorScheme.dark(
+       surface: AppColors.background,
++      primary: AppColors.highlight,
++      onPrimary: Colors.black,
++      secondary: AppColors.highlight,
++      onSecondary: Colors.black,
+     ),
+     bottomSheetTheme: BottomSheetThemeData(
+       backgroundColor: AppColors.black.withOpacity(.3),
+@@ -38,7 +42,7 @@ ThemeData themeData(BuildContext context) {
+     popupMenuTheme: PopupMenuThemeData(
+       shadowColor: Colors.transparent,
+       elevation: 0,
+-      color: const Color(0xFF1B0047),
++      color: const Color(0xFF0D1F12),
+       shape: SmoothRectangleBorder(
+         borderRadius: SmoothBorderRadius(
+           cornerRadius: 8,
+@@ -135,7 +139,7 @@ ThemeData themeData(BuildContext context) {
+           ),
+         ),
+         backgroundColor: WidgetStateProperty.all(AppColors.highlight),
+-        foregroundColor: WidgetStateProperty.all(AppColors.white),
++        foregroundColor: WidgetStateProperty.all(Colors.black),
+         overlayColor: WidgetStateProperty.all(AppColors.highlightAccent),
+         elevation: WidgetStateProperty.all(0),
+         padding: WidgetStateProperty.all(AppDimensions.inputPadding),
+diff --git a/lib/ui/widgets/app_bar.dart b/lib/ui/widgets/app_bar.dart
+index 60213f8..19e1e58 100644
+--- a/lib/ui/widgets/app_bar.dart
++++ b/lib/ui/widgets/app_bar.dart
+@@ -72,7 +72,7 @@ class AppBar extends StatelessWidget {
+                 opacity: t,
+                 child: Container(
+                   height: collapsedHeight,
+-                  color: const Color.fromRGBO(25, 0, 64, 0.95),
++                  color: const Color.fromRGBO(0, 30, 15, 0.95),
+                 ),
+               ),
+               FlexibleSpaceBar(
+diff --git a/lib/ui/widgets/form_sheet.dart b/lib/ui/widgets/form_sheet.dart
+index a0555c1..afb1242 100644
+--- a/lib/ui/widgets/form_sheet.dart
++++ b/lib/ui/widgets/form_sheet.dart
+@@ -267,7 +267,7 @@ class FormDropdown<T> extends StatelessWidget {
+         child: DropdownButton<T>(
+           value: value,
+           isExpanded: true,
+-          dropdownColor: const Color(0xFF2C2C2E),
++          dropdownColor: const Color(0xFF0D1F12),
+           borderRadius: BorderRadius.circular(8),
+           padding: const EdgeInsets.symmetric(horizontal: 12),
+           icon: Icon(icon, size: 12, color: CupertinoColors.systemGrey),
+diff --git a/lib/ui/widgets/gradient_decorated_container.dart b/lib/ui/widgets/gradient_decorated_container.dart
+index e1011b8..f4356e0 100644
+--- a/lib/ui/widgets/gradient_decorated_container.dart
++++ b/lib/ui/widgets/gradient_decorated_container.dart
+@@ -10,14 +10,21 @@ class GradientDecoratedContainer extends StatelessWidget {
+ 
+   @override
+   Widget build(BuildContext context) {
++    // Zapar brand gradient: negro profundo con tinte verde desde la esquina
++    // inferior-izquierda hacia el fondo oscuro sólido de la app.
+     return Container(
+       child: child,
+       padding: padding,
+       decoration: const BoxDecoration(
+-        image: DecorationImage(
+-          image: AssetImage('assets/images/background.webp'),
+-          fit: BoxFit.cover,
+-          alignment: Alignment.bottomLeft,
++        gradient: RadialGradient(
++          center: Alignment.bottomLeft,
++          radius: 1.4,
++          colors: [
++            Color(0xFF0F3020), // verde oscuro (#19D163 desaturado)
++            Color(0xFF0A1F14),
++            Color(0xFF181818), // fondo base
++          ],
++          stops: [0.0, 0.35, 1.0],
+         ),
+       ),
+     );
+diff --git a/lib/ui/widgets/horizontal_card_scroller.dart b/lib/ui/widgets/horizontal_card_scroller.dart
+index 842b9e7..f92e490 100644
+--- a/lib/ui/widgets/horizontal_card_scroller.dart
++++ b/lib/ui/widgets/horizontal_card_scroller.dart
+@@ -75,9 +75,10 @@ class PlaceholderCard extends StatelessWidget {
+         dimension: dimension,
+         child: ElevatedButton(
+           onPressed: onPressed,
+-          child: Icon(icon, size: 32),
++          child: Icon(icon, size: 32, color: Colors.black),
+           style: ElevatedButton.styleFrom(
+             backgroundColor: AppColors.highlight,
++            foregroundColor: Colors.black,
+           ),
+         ),
+       ),
+diff --git a/lib/ui/widgets/mini_player.dart b/lib/ui/widgets/mini_player.dart
+index f24a353..c65fe2b 100644
+--- a/lib/ui/widgets/mini_player.dart
++++ b/lib/ui/widgets/mini_player.dart
+@@ -90,7 +90,7 @@ class _MiniPlayerState extends State<MiniPlayer> with StreamSubscriber {
+         child: FrostedGlassBackground(
+           sigma: 20.0,
+           child: Container(
+-            color: Color.fromRGBO(25, 0, 64, .5),
++            color: Color.fromRGBO(0, 30, 15, .5),
+             child: Column(
+               mainAxisSize: MainAxisSize.max,
+               children: [
+diff --git a/lib/ui/widgets/playable_cache_icon.dart b/lib/ui/widgets/playable_cache_icon.dart
+index 77b2c9a..f5a4659 100644
+--- a/lib/ui/widgets/playable_cache_icon.dart
++++ b/lib/ui/widgets/playable_cache_icon.dart
+@@ -89,7 +89,7 @@ class _PlayableCacheIconState extends State<PlayableCacheIcon>
+       icon = Icon(
+         CupertinoIcons.checkmark_alt_circle_fill,
+         size: 18,
+-        color: Color(0xFFFAD763),
++        color: AppColors.highlight,
+       );
+     } else {
+       icon = Icon(CupertinoIcons.cloud_download_fill, size: 16);
+diff --git a/lib/ui/widgets/playable_list_header.dart b/lib/ui/widgets/playable_list_header.dart
+index 7f48ee9..ddc8ed3 100644
+--- a/lib/ui/widgets/playable_list_header.dart
++++ b/lib/ui/widgets/playable_list_header.dart
+@@ -127,7 +127,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
+                       height: 48,
+                       child: DecoratedBox(
+                         decoration: BoxDecoration(
+-                          color: Color.fromRGBO(25, 0, 64, .5),
++                          color: Color.fromRGBO(0, 30, 15, .5),
+                           borderRadius: BorderRadius.circular(100),
+                         ),
+                         child: t < 0.3
+@@ -193,7 +193,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
+                             height: 48,
+                             child: CupertinoButton(
+                               padding: EdgeInsets.zero,
+-                              color: Color.fromRGBO(25, 0, 64, .5),
++                              color: Color.fromRGBO(0, 30, 15, .5),
+                               borderRadius: BorderRadius.circular(100),
+                               onPressed: _searching ? null : onPlayPressed,
+                               child: Row(
+@@ -219,7 +219,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
+                             height: 48,
+                             child: CupertinoButton(
+                               padding: EdgeInsets.zero,
+-                              color: Color.fromRGBO(25, 0, 64, .5),
++                              color: Color.fromRGBO(0, 30, 15, .5),
+                               borderRadius: BorderRadius.circular(100),
+                               onPressed: _searching ? null : onShufflePressed,
+                               child: Row(
+diff --git a/lib/ui/widgets/playable_thumbnail.dart b/lib/ui/widgets/playable_thumbnail.dart
+index 9e912fb..979bf45 100644
+--- a/lib/ui/widgets/playable_thumbnail.dart
++++ b/lib/ui/widgets/playable_thumbnail.dart
+@@ -137,7 +137,7 @@ class PlayingPlayableThumbnail extends StatelessWidget {
+             dimension: double.infinity,
+             child: DecoratedBox(
+               decoration: BoxDecoration(
+-                color: Color(0xFF410928).withOpacity(.7),
++                color: Color(0xFF082814).withOpacity(.7),
+               ),
+             ),
+           ),
+diff --git a/lib/ui/widgets/pull_to_refresh.dart b/lib/ui/widgets/pull_to_refresh.dart
+index 71be049..6036c66 100644
+--- a/lib/ui/widgets/pull_to_refresh.dart
++++ b/lib/ui/widgets/pull_to_refresh.dart
+@@ -21,7 +21,7 @@ class _PullToRefreshState extends State<PullToRefresh> {
+     return RefreshIndicator(
+       backgroundColor: AppColors.highlight.withOpacity(.8),
+       onRefresh: widget.onRefresh,
+-      color: Colors.white,
++      color: Colors.black,
+       displacement: 0,
+       edgeOffset: 60,
+       child: widget.child,
+diff --git a/lib/ui/widgets/qr_login_button.dart b/lib/ui/widgets/qr_login_button.dart
+index 3863f59..636a1ef 100644
+--- a/lib/ui/widgets/qr_login_button.dart
++++ b/lib/ui/widgets/qr_login_button.dart
+@@ -1,38 +1,60 @@
+ import 'dart:convert';
+ 
++import 'package:app/constants/colors.dart';
+ import 'package:flutter/material.dart';
+ import 'package:native_qr/native_qr.dart';
+ 
+-class QrLoginButton extends StatelessWidget {
++class QrLoginButton extends StatefulWidget {
+   const QrLoginButton({Key? key, required this.onResult}) : super(key: key);
+ 
+-  final Function({required String host, required String token}) onResult;
++  final Function({required String token}) onResult;
++
++  @override
++  State<QrLoginButton> createState() => _QrLoginButtonState();
++}
++
++class _QrLoginButtonState extends State<QrLoginButton> {
++  var _active = false;
++
++  Future<void> _scan() async {
++    try {
++      var nativeQr = NativeQr();
++      String? payload = await nativeQr.get();
++      if (payload != null) {
++        Codec<String, String> stringToBase64 = utf8.fuse(base64);
++        var decodedPayload = stringToBase64.decode(payload);
++        var payloadJson = jsonDecode(decodedPayload);
++        widget.onResult(token: payloadJson['token']);
++      }
++    } catch (err) {
++      print(err);
++    }
++  }
+ 
+   @override
+   Widget build(BuildContext context) {
+-    return ElevatedButton(
+-      child: Icon(Icons.qr_code, size: 32),
+-      style: ElevatedButton.styleFrom(
+-        backgroundColor: Colors.transparent,
+-        shape: CircleBorder(),
++    final iconColor = _active ? Colors.black : Colors.white;
++    final bgColor = _active ? AppColors.highlight : Colors.transparent;
++
++    return MouseRegion(
++      onEnter: (_) => setState(() => _active = true),
++      onExit: (_) => setState(() => _active = false),
++      child: GestureDetector(
++        behavior: HitTestBehavior.opaque,
++        onTapDown: (_) => setState(() => _active = true),
++        onTapUp: (_) => setState(() => _active = false),
++        onTapCancel: () => setState(() => _active = false),
++        onTap: _scan,
++        child: Container(
++          width: 56,
++          height: 56,
++          decoration: BoxDecoration(
++            color: bgColor,
++            shape: BoxShape.circle,
++          ),
++          child: Icon(Icons.qr_code, size: 32, color: iconColor),
++        ),
+       ),
+-      onPressed: () async {
+-        try {
+-          var nativeQr = NativeQr();
+-          String? payload = await nativeQr.get();
+-          if (payload != null) {
+-            Codec<String, String> stringToBase64 = utf8.fuse(base64);
+-            var decodedPayload = stringToBase64.decode(payload);
+-            var payloadJson = jsonDecode(decodedPayload);
+-            onResult(
+-              host: payloadJson['host'],
+-              token: payloadJson['token'],
+-            );
+-          }
+-        } catch (err) {
+-          print(err);
+-        }
+-      },
+     );
+   }
+ }
+diff --git a/web/index.html b/web/index.html
+index 7f66459..efbdf3a 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -5,15 +5,15 @@
+ 
+     <meta charset="UTF-8">
+     <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+-    <meta name="description" content="Koel music streaming application.">
++    <meta name="description" content="Zapar music streaming application.">
+ 
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta name="apple-mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-status-bar-style" content="black">
+-    <meta name="apple-mobile-web-app-title" content="Koel">
++    <meta name="apple-mobile-web-app-title" content="Zapar">
+     <link rel="apple-touch-icon" href="icons/Icon-192.png">
+ 
+-    <title>Koel</title>
++    <title>Zapar</title>
+     <link rel="manifest" href="manifest.json">
+     <link rel="icon" type="image/png" href="favicon.png"/>
+ </head>
+diff --git a/web/manifest.json b/web/manifest.json
+index 198e315..e561ab9 100644
+--- a/web/manifest.json
++++ b/web/manifest.json
+@@ -1,11 +1,11 @@
+ {
+-    "name": "Koel",
+-    "short_name": "Koel",
++    "name": "Zapar",
++    "short_name": "Zapar",
+     "start_url": "./",
+     "display": "standalone",
+-    "background_color": "#ffffff",
+-    "theme_color": "#ffffff",
+-    "description": "Koel music streaming application",
++    "background_color": "#181818",
++    "theme_color": "#19D163",
++    "description": "Zapar music streaming application",
+     "orientation": "portrait-primary",
+     "prefer_related_applications": false,
+     "icons": [
