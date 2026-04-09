@@ -453,7 +453,7 @@ class _RadioStationRow extends StatelessWidget {
                       Container(
                         width: 40,
                         height: 40,
-                        color: const Color(0xFF410928).withOpacity(.7),
+                        color: const Color(0xFF082814).withOpacity(.7),
                       ),
                       if (radioPlayer.loading || radioPlayer.playing)
                         Center(

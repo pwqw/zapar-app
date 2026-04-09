@@ -38,7 +38,7 @@ ThemeData themeData(BuildContext context) {
     popupMenuTheme: PopupMenuThemeData(
       shadowColor: Colors.transparent,
       elevation: 0,
-      color: const Color(0xFF1B0047),
+      color: const Color(0xFF0D1F12),
       shape: SmoothRectangleBorder(
         borderRadius: SmoothBorderRadius(
           cornerRadius: 8,
@@ -135,7 +135,7 @@ ThemeData themeData(BuildContext context) {
           ),
         ),
         backgroundColor: WidgetStateProperty.all(AppColors.highlight),
-        foregroundColor: WidgetStateProperty.all(AppColors.white),
+        foregroundColor: WidgetStateProperty.all(Colors.black),
         overlayColor: WidgetStateProperty.all(AppColors.highlightAccent),
         elevation: WidgetStateProperty.all(0),
         padding: WidgetStateProperty.all(AppDimensions.inputPadding),

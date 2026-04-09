@@ -21,7 +21,7 @@ class _PullToRefreshState extends State<PullToRefresh> {
     return RefreshIndicator(
       backgroundColor: AppColors.highlight.withOpacity(.8),
       onRefresh: widget.onRefresh,
-      color: Colors.white,
+      color: Colors.black,
       displacement: 0,
       edgeOffset: 60,
       child: widget.child,

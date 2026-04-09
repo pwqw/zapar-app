@@ -89,7 +89,7 @@ class _PlayableCacheIconState extends State<PlayableCacheIcon>
       icon = Icon(
         CupertinoIcons.checkmark_alt_circle_fill,
         size: 18,
-        color: Color(0xFFFAD763),
+        color: AppColors.highlight,
       );
     } else {
       icon = Icon(CupertinoIcons.cloud_download_fill, size: 16);

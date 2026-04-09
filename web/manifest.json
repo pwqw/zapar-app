@@ -1,11 +1,11 @@
 {
-    "name": "Koel",
-    "short_name": "Koel",
+    "name": "Zapar",
+    "short_name": "Zapar",
     "start_url": "./",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#ffffff",
-    "description": "Koel music streaming application",
+    "background_color": "#181818",
+    "theme_color": "#19D163",
+    "description": "Zapar music streaming application",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
