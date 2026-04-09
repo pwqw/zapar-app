@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:native_qr/native_qr.dart';
 
@@ -11,10 +12,25 @@ class QrLoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      child: Icon(Icons.qr_code, size: 32),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        shape: CircleBorder(),
+      child: const Icon(Icons.qr_code, size: 32),
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.pressed)) {
+            return AppColors.highlight;
+          }
+          return Colors.transparent;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.pressed)) {
+            return Colors.black;
+          }
+          return Colors.white;
+        }),
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        shape: WidgetStateProperty.all(const CircleBorder()),
+        elevation: WidgetStateProperty.all(0),
       ),
       onPressed: () async {
         try {
