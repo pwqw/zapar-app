@@ -3,6 +3,7 @@ import 'package:app/exceptions/exceptions.dart';
 import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/screens/screens.dart';
+import 'package:app/ui/widgets/google_sign_in_button.dart';
 import 'package:app/ui/widgets/qr_login_button.dart';
 import 'package:app/ui/widgets/widgets.dart';
 import 'package:app/utils/preferences.dart' as preferences;
@@ -25,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
 
   final formKey = GlobalKey<FormState>();
   var _authenticating = false;
+  var _googleAuthenticating = false;
   var _showPassword = false;
   late final AuthProvider _auth;
 
@@ -103,6 +105,46 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     if (successful) {
       preferences.host = _host;
       preferences.userEmail = _email;
+      redirectToDataLoadingScreen();
+    }
+  }
+
+  Future<void> attemptGoogleLogin() async {
+    setState(() => _googleAuthenticating = true);
+    var successful = false;
+
+    try {
+      final consentData = await _auth.loginWithGoogle();
+
+      if (consentData != null) {
+        // New user — navigate to consent screen
+        if (mounted) {
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => GoogleConsentScreen(
+                ssoUser: Map<String, dynamic>.from(consentData['sso_user']),
+                legalUrls: Map<String, dynamic>.from(consentData['legal_urls']),
+              ),
+            ),
+          );
+          // If consent screen handled login, it already navigated away
+          return;
+        }
+      } else {
+        await _auth.tryGetAuthUser();
+        successful = true;
+      }
+    } on Exception catch (e) {
+      if (e.toString().contains('cancelled')) {
+        // User cancelled — do nothing
+      } else {
+        await showErrorDialog(context);
+      }
+    } finally {
+      if (mounted) setState(() => _googleAuthenticating = false);
+    }
+
+    if (successful) {
       redirectToDataLoadingScreen();
     }
   }
@@ -199,7 +241,13 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                         onPressed: _authenticating ? null : attemptLogin,
                       ),
                     ),
-                    _authenticating
+                    GoogleSignInButton(
+                      onPressed: _authenticating || _googleAuthenticating
+                          ? null
+                          : attemptGoogleLogin,
+                      loading: _googleAuthenticating,
+                    ),
+                    _authenticating || _googleAuthenticating
                         ? SizedBox()
                         : QrLoginButton(
                             onResult: ({required String token}) {
