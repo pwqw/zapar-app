@@ -65,4 +65,4 @@ jobs:
           packageName: ${{ secrets.PACKAGE_NAME }}
           releaseFiles: release-assets/app-release.aab
           track: beta
-          status: completed
+          status: draft
