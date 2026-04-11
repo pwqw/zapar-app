@@ -55,7 +55,7 @@ if (resolvedApplicationId == null) {
     }
 }
 if (resolvedApplicationId == null || resolvedApplicationId.isEmpty()) {
-    resolvedApplicationId = 'ar.zap.app'
+    resolvedApplicationId = 'dev.koel.player'
 }
 
 android {
@@ -86,6 +86,10 @@ android {
         ndk {
             debugSymbolLevel 'SYMBOL_TABLE'
         }
+
+        manifestPlaceholders = [
+            appLabel: project.findProperty('APP_LABEL') ?: 'Koel'
+        ]
     }
 
     signingConfigs {

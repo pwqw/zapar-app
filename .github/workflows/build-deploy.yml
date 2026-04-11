@@ -77,6 +77,9 @@ jobs:
           --build-number="${{ steps.versioning.outputs.version_code }}"
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
           --dart-define=KOEL_HOST=${{ secrets.KOEL_HOST }}
+          -Ptarget-platform=android-arm,android-arm64
+        env:
+          ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
 
       - name: Create Release
         env:

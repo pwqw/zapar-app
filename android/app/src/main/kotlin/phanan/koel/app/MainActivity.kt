@@ -1,4 +1,4 @@
-package ar.zap.app
+package dev.koel.player
 
 import android.os.Build
 import android.os.Bundle
