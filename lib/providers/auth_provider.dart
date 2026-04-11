@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app/app_state.dart';
+import 'package:app/constants/strings.dart';
 import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/models/models.dart';
 import 'package:app/utils/api_request.dart';
@@ -61,9 +62,7 @@ class AuthProvider with StreamSubscriber {
   /// if consent is required for a new user.
   Future<Map<String, dynamic>?> loginWithGoogle() async {
     final googleSignIn = GoogleSignIn(
-      // The Web OAuth Client ID — used as audience for the id_token.
-      // This is NOT a secret; it's the same value visible in the web app HTML.
-      serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID'),
+      serverClientId: AppStrings.googleServerClientId,
     );
 
     final account = await googleSignIn.signIn();
@@ -80,7 +79,9 @@ class AuthProvider with StreamSubscriber {
 
     final response = await post('me/google', data: {'id_token': idToken});
 
-    if (response != null && response['requires_consent'] == true) {
+    if (response == null) throw Exception('Empty response from server');
+
+    if (response['requires_consent'] == true) {
       return response;
     }
 
