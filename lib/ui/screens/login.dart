@@ -195,8 +195,8 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
 
   @override
   Widget build(BuildContext context) {
-    String? requireValue(value) =>
-        value == null || value.isEmpty ? 'This field is required' : null;
+    String? requireValue(String? value) =>
+        value == null || value.trim().isEmpty ? 'This field is required' : null;
 
     return Scaffold(
       body: GradientDecoratedContainer(
