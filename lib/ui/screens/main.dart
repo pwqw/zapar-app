@@ -10,6 +10,7 @@ import 'package:app/utils/platform_compat.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
@@ -112,15 +113,15 @@ class _MainScreenState extends State<MainScreen> {
                     border: Border(top: Divider.createBorderSide(context)),
                     items: <BottomNavigationBarItem>[
                       tabBarItem(
-                        title: 'Home',
+                        title: AppLocalizations.of(context)!.tabHome,
                         icon: CupertinoIcons.house_fill,
                       ),
                       tabBarItem(
-                        title: 'Search',
+                        title: AppLocalizations.of(context)!.tabSearch,
                         icon: CupertinoIcons.search,
                       ),
                       tabBarItem(
-                        title: 'Library',
+                        title: AppLocalizations.of(context)!.tabLibrary,
                         icon: CupertinoIcons.music_albums_fill,
                       ),
                     ],
