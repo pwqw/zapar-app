@@ -52,6 +52,7 @@ jobs:
       - name: Download release bundle
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release download "${{ needs.resolve_release_tag.outputs.tag }}" \
             --pattern 'app-release.aab' \
