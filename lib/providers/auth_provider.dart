@@ -63,8 +63,7 @@ class AuthProvider with StreamSubscriber {
     final googleSignIn = GoogleSignIn(
       // The Web OAuth Client ID — used as audience for the id_token.
       // This is NOT a secret; it's the same value visible in the web app HTML.
-      serverClientId:
-          '855203105498-8oq1o3ks1t8r9b5n6g5j0c2k8v7h3f4p.apps.googleusercontent.com',
+      serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID'),
     );
 
     final account = await googleSignIn.signIn();
@@ -74,7 +73,10 @@ class AuthProvider with StreamSubscriber {
     final idToken = auth.idToken;
     if (idToken == null) throw Exception('No ID token received');
 
-    preferences.host = 'https://zap.ar';
+    preferences.host = const String.fromEnvironment(
+      'KOEL_HOST',
+      defaultValue: 'https://localhost',
+    );
 
     final response = await post('me/google', data: {'id_token': idToken});
 

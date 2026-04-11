@@ -22,7 +22,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
-  static const _host = 'https://zap.ar';
+  static const _host = String.fromEnvironment(
+    'KOEL_HOST',
+    defaultValue: 'https://localhost',
+  );
 
   final formKey = GlobalKey<FormState>();
   var _authenticating = false;

@@ -10,8 +10,8 @@ class GradientDecoratedContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Zapar brand gradient: negro profundo con tinte verde desde la esquina
-    // inferior-izquierda hacia el fondo oscuro sólido de la app.
+    // Brand gradient: deep black with green tint from bottom-left corner
+    // towards the solid dark app background.
     return Container(
       child: child,
       padding: padding,

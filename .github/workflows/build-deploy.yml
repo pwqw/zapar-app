@@ -75,6 +75,8 @@ jobs:
           flutter build appbundle --release
           --build-name="${{ steps.versioning.outputs.version_name }}"
           --build-number="${{ steps.versioning.outputs.version_code }}"
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          --dart-define=KOEL_HOST=${{ secrets.KOEL_HOST }}
 
       - name: Create Release
         env:
