@@ -128,7 +128,7 @@ class _GoogleConsentScreenState extends State<GoogleConsentScreen> {
                   onChanged: (v) => setState(() => _termsAccepted = v ?? false),
                   label: 'I accept the ',
                   linkText: 'Terms and Conditions',
-                  onTapLink: () => _openUrl(termsUrl),
+                  onTapLink: termsUrl != null ? () => _openUrl(termsUrl) : null,
                 ),
                 _ConsentCheckbox(
                   value: _privacyAccepted,
@@ -136,7 +136,7 @@ class _GoogleConsentScreenState extends State<GoogleConsentScreen> {
                       setState(() => _privacyAccepted = v ?? false),
                   label: 'I accept the ',
                   linkText: 'Privacy Policy',
-                  onTapLink: () => _openUrl(privacyUrl),
+                  onTapLink: privacyUrl != null ? () => _openUrl(privacyUrl) : null,
                 ),
                 _ConsentCheckbox(
                   value: _ageVerified,
@@ -215,9 +215,13 @@ class _ConsentCheckbox extends StatelessWidget {
                         child: Text(
                           linkText!,
                           style: TextStyle(
-                            color: AppColors.highlight,
+                            color: onTapLink != null
+                                ? AppColors.highlight
+                                : Colors.white38,
                             fontSize: 14,
-                            decoration: TextDecoration.underline,
+                            decoration: onTapLink != null
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
                             decorationColor: AppColors.highlight,
                           ),
                         ),

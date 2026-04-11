@@ -6,6 +6,7 @@ import 'package:app/ui/screens/screens.dart';
 import 'package:app/ui/widgets/google_sign_in_button.dart';
 import 'package:app/ui/widgets/qr_login_button.dart';
 import 'package:app/ui/widgets/widgets.dart';
+import 'package:app/utils/api_request.dart' as api;
 import 'package:app/utils/preferences.dart' as preferences;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +37,8 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
   late String _email;
   late String _password;
 
+  Map<String, dynamic>? _appData;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +48,20 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     setState(() {
       _email = preferences.userEmail ?? '';
     });
+
+    _fetchAppData();
+  }
+
+  Future<void> _fetchAppData() async {
+    try {
+      preferences.host = _host;
+      final data = await api.get('app-data');
+      if (mounted && data is Map<String, dynamic>) {
+        setState(() => _appData = data);
+      }
+    } catch (_) {
+      // Silently fail — legal URLs will be fetched from consent response as fallback
+    }
   }
 
   @override
@@ -123,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
         // New user — navigate to consent screen
         if (mounted) {
           final rawSsoUser = consentData['sso_user'];
-          final rawLegalUrls = consentData['legal_urls'];
+          final rawLegalUrls = _appData?['legal_urls'] ?? consentData['legal_urls'];
           if (rawSsoUser is! Map || rawLegalUrls is! Map) {
             await showErrorDialog(
               context,
