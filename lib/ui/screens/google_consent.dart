@@ -2,6 +2,7 @@ import 'package:app/constants/constants.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/screens/screens.dart';
 import 'package:app/ui/widgets/widgets.dart';
+import 'package:app/utils/preferences.dart' as preferences;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,13 +64,39 @@ class _GoogleConsentScreenState extends State<GoogleConsentScreen> {
     return uri.host.isNotEmpty;
   }
 
+  /// Backend may return absolute URLs or internal routes (e.g. `/legal/terms`).
+  Uri? _resolveOpenableUri(String trimmed) {
+    final parsed = Uri.tryParse(trimmed);
+    if (parsed == null) {
+      return null;
+    }
+    if (_isValidHttpUrl(parsed)) {
+      return parsed;
+    }
+
+    final base = preferences.host?.trim();
+    if (base == null || base.isEmpty) {
+      return null;
+    }
+    final baseUri = Uri.tryParse(base);
+    if (baseUri == null || !_isValidHttpUrl(baseUri)) {
+      return null;
+    }
+
+    final resolved = baseUri.resolve(trimmed);
+    if (!_isValidHttpUrl(resolved)) {
+      return null;
+    }
+    return resolved;
+  }
+
   Future<void> _openUrl(String? url) async {
     if (url == null) return;
     final trimmed = url.trim();
     if (trimmed.isEmpty) return;
 
-    final uri = Uri.tryParse(trimmed);
-    if (uri == null || !_isValidHttpUrl(uri)) {
+    final uri = _resolveOpenableUri(trimmed);
+    if (uri == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open this link.')),
