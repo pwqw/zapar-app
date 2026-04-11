@@ -29,9 +29,17 @@ if (keystorePropertiesFile.exists()) {
 }
 
 def resolvedApplicationId = null
-def fromLocalApplicationId = localProperties.getProperty('android.applicationId')
-if (fromLocalApplicationId != null && !fromLocalApplicationId.trim().isEmpty()) {
-    resolvedApplicationId = fromLocalApplicationId.trim()
+// 1. Gradle property (CI: -PPACKAGE_NAME=... or ORG_GRADLE_PROJECT_PACKAGE_NAME env)
+def fromGradleProperty = project.findProperty('PACKAGE_NAME')
+if (fromGradleProperty != null && !fromGradleProperty.trim().isEmpty()) {
+    resolvedApplicationId = fromGradleProperty.trim()
+}
+// 2. local.properties
+if (resolvedApplicationId == null) {
+    def fromLocalApplicationId = localProperties.getProperty('android.applicationId')
+    if (fromLocalApplicationId != null && !fromLocalApplicationId.trim().isEmpty()) {
+        resolvedApplicationId = fromLocalApplicationId.trim()
+    }
 }
 if (resolvedApplicationId == null) {
     def envFile = new File(rootProject.projectDir, '../.env')

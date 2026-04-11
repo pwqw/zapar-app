@@ -80,6 +80,7 @@ jobs:
           -Ptarget-platform=android-arm,android-arm64
         env:
           ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
+          ORG_GRADLE_PROJECT_PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
 
       - name: Create Release
         env:
