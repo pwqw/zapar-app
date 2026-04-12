@@ -123,9 +123,11 @@ test: ## Tests en Docker (build_runner + flutter test)
 # integration_test Android necesita SDK/emulador; la imagen koel-dev solo precachea web.
 # Usar este target en CI (flutter-action) o en un host con `flutter` + Android toolchain.
 # FORM_FACTOR=phone|tablet (prefijo de nombres de captura).
-integration-screenshots-ci: ## flutter test integration_test/screenshot_journey_test.dart (host con Android)
+integration-screenshots-ci: ## flutter drive integration_test/screenshot_journey_test.dart (guarda PNGs a integration_test/screenshots/)
 	flutter pub get
-	flutter test integration_test/screenshot_journey_test.dart \
+	flutter drive \
+		--driver=test_driver/integration_test.dart \
+		--target=integration_test/screenshot_journey_test.dart \
 		--dart-define-from-file=screenshot_defines.json
 
 # Misma convención Docker que `test`; fallará en la imagen actual sin Android SDK — usar integration-screenshots-ci o CI.

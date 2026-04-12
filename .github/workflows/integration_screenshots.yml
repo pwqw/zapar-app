@@ -16,6 +16,7 @@ jobs:
     environment: Test
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - form_factor: phone
@@ -96,7 +97,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: integration-screenshots-${{ matrix.form_factor }}
-          path: |
-            build/integration_test/**/*.png
-            integration_test/**/*.png
-          if-no-files-found: ignore
+          path: integration_test/screenshots/**/*.png
+          if-no-files-found: error

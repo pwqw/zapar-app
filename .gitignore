@@ -58,3 +58,4 @@ app.*.map.json
 /.env
 
 screenshot_defines.json
+integration_test/screenshots/
