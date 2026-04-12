@@ -48,13 +48,13 @@ jobs:
           arch: x86_64
           profile: ${{ matrix.profile }}
           disable-animations: true
-          script: |
-            FORM_FACTOR=${{ matrix.form_factor }} \
-            SCREENSHOT_WITH_BACKEND=${{ vars.SCREENSHOT_WITH_BACKEND || 'true' }} \
-            KOEL_HOST='${{ secrets.KOEL_HOST }}' \
-            KOEL_EMAIL='${{ secrets.KOEL_EMAIL }}' \
-            KOEL_PASSWORD='${{ secrets.KOEL_PASSWORD }}' \
-            SCREENSHOT_SEARCH_TERM='${{ vars.SCREENSHOT_SEARCH_TERM || 'zamba' }}' \
+          script: >-
+            FORM_FACTOR=${{ matrix.form_factor }}
+            SCREENSHOT_WITH_BACKEND=${{ vars.SCREENSHOT_WITH_BACKEND || 'true' }}
+            KOEL_HOST='${{ secrets.KOEL_HOST }}'
+            KOEL_EMAIL='${{ secrets.KOEL_EMAIL }}'
+            KOEL_PASSWORD='${{ secrets.KOEL_PASSWORD }}'
+            SCREENSHOT_SEARCH_TERM='${{ vars.SCREENSHOT_SEARCH_TERM || 'zamba' }}'
             make integration-screenshots-ci
 
       - name: Upload PNG artifacts
