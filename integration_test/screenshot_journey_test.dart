@@ -35,11 +35,28 @@ void main() {
       assert(kKoelEmail.isNotEmpty, 'KOEL_EMAIL required');
       assert(kKoelPassword.isNotEmpty, 'KOEL_PASSWORD required');
 
-      await AuthProvider().login(
-        host: kKoelHost,
-        email: kKoelEmail,
-        password: kKoelPassword,
-      );
+      // Koel throttles /api/me. Retry w/ backoff for rate-limited CI runs.
+      const List<int> backoffs = [0, 15, 30, 60, 90];
+      Object? lastError;
+      for (final int wait in backoffs) {
+        if (wait > 0) {
+          await Future<void>.delayed(Duration(seconds: wait));
+        }
+        try {
+          await AuthProvider().login(
+            host: kKoelHost,
+            email: kKoelEmail,
+            password: kKoelPassword,
+          );
+          lastError = null;
+          break;
+        } catch (e) {
+          lastError = e;
+          // ignore: avoid_print
+          print('login attempt failed (waited ${wait}s): $e');
+        }
+      }
+      if (lastError != null) throw lastError;
     }
 
     Widget shell = const ScreenshotShellApp(
@@ -67,9 +84,19 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 30));
 
     // NetworkImage resolution doesn't participate in pumpAndSettle; runAsync
-    // lets real timers run so remote album art finishes downloading + decoding.
+    // lets real timers run so remote album art downloads + decodes. Then
+    // precacheImage on every visible Image forces completion before capture.
     await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(seconds: 8));
+      await Future<void>.delayed(const Duration(seconds: 20));
+      final BuildContext ctx = tester.element(find.byType(MainScreen));
+      final Iterable<Element> imageElements =
+          find.byType(Image).evaluate().cast<Element>();
+      for (final Element el in imageElements) {
+        final Image img = el.widget as Image;
+        try {
+          await precacheImage(img.image, ctx);
+        } catch (_) {}
+      }
     });
     await tester.pumpAndSettle(const Duration(seconds: 10));
 
@@ -93,7 +120,16 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 2));
       // searchExcerpts hits backend + NetworkImage for result covers.
       await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(seconds: 8));
+        await Future<void>.delayed(const Duration(seconds: 15));
+        final BuildContext ctx = tester.element(find.byType(MainScreen));
+        final Iterable<Element> imageElements =
+            find.byType(Image).evaluate().cast<Element>();
+        for (final Element el in imageElements) {
+          final Image img = el.widget as Image;
+          try {
+            await precacheImage(img.image, ctx);
+          } catch (_) {}
+        }
       });
       await tester.pumpAndSettle(const Duration(seconds: 5));
     }
