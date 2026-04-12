@@ -4,6 +4,7 @@ import 'package:app/main.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/app.dart';
 import 'package:app/ui/screens/main.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,30 @@ import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 
 import 'support/screenshot_shell.dart';
+
+/// Forces every [CachedNetworkImage] currently mounted to download and decode
+/// before the next frame, then waits a few extra frames so the rasterizer
+/// paints them. Returns once all precache futures complete.
+Future<void> _precacheVisibleImagesAndSettle(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    await Future<void>.delayed(const Duration(seconds: 15));
+    final BuildContext ctx = tester.element(find.byType(MainScreen));
+    final List<Future<void>> futures = [];
+    for (final Element el in find.byType(CachedNetworkImage).evaluate()) {
+      final CachedNetworkImage w = el.widget as CachedNetworkImage;
+      futures.add(
+        precacheImage(CachedNetworkImageProvider(w.imageUrl), ctx)
+            .catchError((_) {}),
+      );
+    }
+    if (futures.isNotEmpty) {
+      await Future.wait(futures);
+    }
+    // Extra margin so rasterizer paints the newly-available images.
+    await Future<void>.delayed(const Duration(seconds: 3));
+  });
+  await tester.pumpAndSettle(const Duration(seconds: 5));
+}
 
 /// Store listing journey: Home → Search → Library. Same steps for phone and
 /// tablet; [FORM_FACTOR] prefixes screenshot names (`phone_`, `tablet_`).
@@ -83,22 +108,7 @@ void main() {
 
     await tester.pumpAndSettle(const Duration(seconds: 30));
 
-    // NetworkImage resolution doesn't participate in pumpAndSettle; runAsync
-    // lets real timers run so remote album art downloads + decodes. Then
-    // precacheImage on every visible Image forces completion before capture.
-    await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(seconds: 20));
-      final BuildContext ctx = tester.element(find.byType(MainScreen));
-      final Iterable<Element> imageElements =
-          find.byType(Image).evaluate().cast<Element>();
-      for (final Element el in imageElements) {
-        final Image img = el.widget as Image;
-        try {
-          await precacheImage(img.image, ctx);
-        } catch (_) {}
-      }
-    });
-    await tester.pumpAndSettle(const Duration(seconds: 10));
+    await _precacheVisibleImagesAndSettle(tester);
 
     await IntegrationTestWidgetsFlutterBinding.instance
         .convertFlutterSurfaceToImage();
@@ -118,20 +128,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(searchField.first, kScreenshotSearchTerm);
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      // searchExcerpts hits backend + NetworkImage for result covers.
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(seconds: 15));
-        final BuildContext ctx = tester.element(find.byType(MainScreen));
-        final Iterable<Element> imageElements =
-            find.byType(Image).evaluate().cast<Element>();
-        for (final Element el in imageElements) {
-          final Image img = el.widget as Image;
-          try {
-            await precacheImage(img.image, ctx);
-          } catch (_) {}
-        }
-      });
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+      // searchExcerpts hits backend + CachedNetworkImage for result covers.
+      await _precacheVisibleImagesAndSettle(tester);
     }
 
     await IntegrationTestWidgetsFlutterBinding.instance
