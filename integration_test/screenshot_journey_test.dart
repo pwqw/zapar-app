@@ -4,6 +4,7 @@ import 'package:app/main.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/app.dart';
 import 'package:app/ui/screens/main.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -65,6 +66,13 @@ void main() {
 
     await tester.pumpAndSettle(const Duration(seconds: 30));
 
+    // NetworkImage resolution doesn't participate in pumpAndSettle; runAsync
+    // lets real timers run so remote album art finishes downloading + decoding.
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(seconds: 8));
+    });
+    await tester.pumpAndSettle(const Duration(seconds: 10));
+
     await IntegrationTestWidgetsFlutterBinding.instance
         .convertFlutterSurfaceToImage();
     await tester.pumpAndSettle();
@@ -73,21 +81,28 @@ void main() {
         .takeScreenshot('${prefix}01_home');
 
     await tester.tap(find.byKey(const ValueKey<String>('tab_search')));
-    await tester.pumpAndSettle(const Duration(seconds: 15));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
 
     if (kScreenshotWithBackend) {
-      final Finder searchField = find.byType(TextField);
-      if (searchField.evaluate().isNotEmpty) {
-        await tester.enterText(searchField.first, kScreenshotSearchTerm);
-        await tester.pumpAndSettle(const Duration(seconds: 10));
-      }
+      final Finder searchField = find.byType(CupertinoSearchTextField);
+      expect(searchField, findsWidgets,
+          reason: 'Search tab must show CupertinoSearchTextField');
+      await tester.tap(searchField.first);
+      await tester.pumpAndSettle();
+      await tester.enterText(searchField.first, kScreenshotSearchTerm);
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      // searchExcerpts hits backend + NetworkImage for result covers.
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(seconds: 8));
+      });
+      await tester.pumpAndSettle(const Duration(seconds: 5));
     }
 
     await IntegrationTestWidgetsFlutterBinding.instance
         .takeScreenshot('${prefix}02_search');
 
     await tester.tap(find.byKey(const ValueKey<String>('tab_library')));
-    await tester.pumpAndSettle(const Duration(seconds: 15));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
     await IntegrationTestWidgetsFlutterBinding.instance
         .takeScreenshot('${prefix}03_library');
   });
