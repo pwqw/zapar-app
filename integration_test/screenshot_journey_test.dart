@@ -66,6 +66,10 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 30));
 
     await IntegrationTestWidgetsFlutterBinding.instance
+        .convertFlutterSurfaceToImage();
+    await tester.pumpAndSettle();
+
+    await IntegrationTestWidgetsFlutterBinding.instance
         .takeScreenshot('${prefix}01_home');
 
     await tester.tap(find.byKey(const ValueKey<String>('tab_search')));
