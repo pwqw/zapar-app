@@ -36,6 +36,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Debug secrets presence
+        env:
+          KOEL_HOST: ${{ secrets.KOEL_HOST }}
+          KOEL_EMAIL: ${{ secrets.KOEL_EMAIL }}
+          KOEL_PASSWORD: ${{ secrets.KOEL_PASSWORD }}
+        run: |
+          echo "KOEL_HOST length: ${#KOEL_HOST}"
+          echo "KOEL_EMAIL length: ${#KOEL_EMAIL}"
+          echo "KOEL_PASSWORD length: ${#KOEL_PASSWORD}"
+          [ -n "$KOEL_HOST" ] || { echo "::error::KOEL_HOST secret is empty"; exit 1; }
+          [ -n "$KOEL_EMAIL" ] || { echo "::error::KOEL_EMAIL secret is empty"; exit 1; }
+          [ -n "$KOEL_PASSWORD" ] || { echo "::error::KOEL_PASSWORD secret is empty"; exit 1; }
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

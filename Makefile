@@ -128,12 +128,12 @@ integration-screenshots-ci: ## flutter test integration_test/screenshot_journey_
 	flutter test integration_test/screenshot_journey_test.dart \
 		--dart-define=INTEGRATION_TEST=true \
 		--dart-define=SCREENSHOT_MODE=true \
-		--dart-define=FORM_FACTOR=$(or $(FORM_FACTOR),phone) \
-		--dart-define=SCREENSHOT_WITH_BACKEND=$(or $(SCREENSHOT_WITH_BACKEND),false) \
-		--dart-define=KOEL_HOST=$(KOEL_HOST) \
-		--dart-define=KOEL_EMAIL=$(KOEL_EMAIL) \
-		--dart-define=KOEL_PASSWORD=$(KOEL_PASSWORD) \
-		--dart-define=SCREENSHOT_SEARCH_TERM=$(or $(SCREENSHOT_SEARCH_TERM),zamba)
+		--dart-define="FORM_FACTOR=$${FORM_FACTOR:-phone}" \
+		--dart-define="SCREENSHOT_WITH_BACKEND=$${SCREENSHOT_WITH_BACKEND:-false}" \
+		--dart-define="KOEL_HOST=$${KOEL_HOST}" \
+		--dart-define="KOEL_EMAIL=$${KOEL_EMAIL}" \
+		--dart-define="KOEL_PASSWORD=$${KOEL_PASSWORD}" \
+		--dart-define="SCREENSHOT_SEARCH_TERM=$${SCREENSHOT_SEARCH_TERM:-zamba}"
 
 # Misma convención Docker que `test`; fallará en la imagen actual sin Android SDK — usar integration-screenshots-ci o CI.
 integration-screenshots: ## integration_test screenshots en Docker (requiere imagen con Android o fallo al compilar APK)
