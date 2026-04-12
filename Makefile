@@ -1,4 +1,4 @@
-.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test stop clean clean-docker logs shell reload restart cache-list cache-prune cache-prune-all
+.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build web-build-docker analyze-docker web-serve web-serve-docker test integration-screenshots-ci integration-screenshots stop clean clean-docker logs shell reload restart cache-list cache-prune cache-prune-all
 
 -include .env
 
@@ -119,6 +119,49 @@ test: ## Tests en Docker (build_runner + flutter test)
 		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
 		$(IMAGE_NAME) \
 		sh -c "flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs && flutter test"
+
+# integration_test Android necesita SDK/emulador; la imagen koel-dev solo precachea web.
+# Usar este target en CI (flutter-action) o en un host con `flutter` + Android toolchain.
+# FORM_FACTOR=phone|tablet (prefijo de nombres de captura).
+integration-screenshots-ci: ## flutter test integration_test/screenshot_journey_test.dart (host con Android)
+	flutter pub get
+	flutter test integration_test/screenshot_journey_test.dart \
+		--dart-define=INTEGRATION_TEST=true \
+		--dart-define=SCREENSHOT_MODE=true \
+		--dart-define=FORM_FACTOR=$(or $(FORM_FACTOR),phone) \
+		--dart-define=SCREENSHOT_WITH_BACKEND=$(or $(SCREENSHOT_WITH_BACKEND),false) \
+		--dart-define=KOEL_HOST=$(KOEL_HOST) \
+		--dart-define=KOEL_EMAIL=$(KOEL_EMAIL) \
+		--dart-define=KOEL_PASSWORD=$(KOEL_PASSWORD) \
+		--dart-define=SCREENSHOT_SEARCH_TERM=$(or $(SCREENSHOT_SEARCH_TERM),zamba)
+
+# Misma convención Docker que `test`; fallará en la imagen actual sin Android SDK — usar integration-screenshots-ci o CI.
+integration-screenshots: ## integration_test screenshots en Docker (requiere imagen con Android o fallo al compilar APK)
+	@docker stop $(CONTAINER_NAME_TEST) 2>/dev/null || true
+	@docker rm $(CONTAINER_NAME_TEST) 2>/dev/null || true
+	docker run --rm \
+		--name $(CONTAINER_NAME_TEST) \
+		--network host \
+		-v $(PWD):/app \
+		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
+		-v $(BUILD_VOLUME):/app/build \
+		-v $(PUB_CACHE_VOLUME):/var/pub-cache \
+		-e FORM_FACTOR=$(or $(FORM_FACTOR),phone) \
+		-e SCREENSHOT_WITH_BACKEND=$(or $(SCREENSHOT_WITH_BACKEND),false) \
+		-e KOEL_HOST=$(KOEL_HOST) \
+		-e KOEL_EMAIL=$(KOEL_EMAIL) \
+		-e KOEL_PASSWORD=$(KOEL_PASSWORD) \
+		-e SCREENSHOT_SEARCH_TERM=$(or $(SCREENSHOT_SEARCH_TERM),zamba) \
+		$(IMAGE_NAME) \
+		sh -c 'flutter pub get && flutter test integration_test/screenshot_journey_test.dart \
+			--dart-define=INTEGRATION_TEST=true \
+			--dart-define=SCREENSHOT_MODE=true \
+			--dart-define=FORM_FACTOR=$${FORM_FACTOR} \
+			--dart-define=SCREENSHOT_WITH_BACKEND=$${SCREENSHOT_WITH_BACKEND} \
+			--dart-define=KOEL_HOST=$${KOEL_HOST} \
+			--dart-define=KOEL_EMAIL=$${KOEL_EMAIL} \
+			--dart-define=KOEL_PASSWORD=$${KOEL_PASSWORD} \
+			--dart-define=SCREENSHOT_SEARCH_TERM=$${SCREENSHOT_SEARCH_TERM}'
 
 stop:
 	@docker stop $(CONTAINER_NAME_DEV) $(CONTAINER_NAME_TEST) 2>/dev/null || true

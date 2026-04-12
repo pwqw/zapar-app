@@ -59,6 +59,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   BottomNavigationBarItem tabBarItem({
+    required Key tabIconKey,
     required String title,
     required IconData icon,
   }) {
@@ -66,7 +67,7 @@ class _MainScreenState extends State<MainScreen> {
       icon: Column(
         children: [
           const SizedBox(height: 14.0),
-          Icon(icon),
+          Icon(icon, key: tabIconKey),
           const SizedBox(height: 4.0),
           Text(title),
         ],
@@ -113,14 +114,17 @@ class _MainScreenState extends State<MainScreen> {
                     border: Border(top: Divider.createBorderSide(context)),
                     items: <BottomNavigationBarItem>[
                       tabBarItem(
+                        tabIconKey: const ValueKey<String>('tab_home'),
                         title: AppLocalizations.of(context)!.tabHome,
                         icon: CupertinoIcons.house_fill,
                       ),
                       tabBarItem(
+                        tabIconKey: const ValueKey<String>('tab_search'),
                         title: AppLocalizations.of(context)!.tabSearch,
                         icon: CupertinoIcons.search,
                       ),
                       tabBarItem(
+                        tabIconKey: const ValueKey<String>('tab_library'),
                         title: AppLocalizations.of(context)!.tabLibrary,
                         icon: CupertinoIcons.music_albums_fill,
                       ),

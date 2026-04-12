@@ -1,0 +1,68 @@
+name: Integration screenshots
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'integration_test/**'
+      - '.github/workflows/integration_screenshots.yml'
+      - 'Makefile'
+      - 'pubspec.yaml'
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - form_factor: phone
+            profile: pixel_6
+          - form_factor: tablet
+            profile: '10.1in WXGA (Tablet)'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: 'stable'
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run integration screenshot test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: ${{ matrix.profile }}
+          disable-animations: true
+          script: |
+            FORM_FACTOR=${{ matrix.form_factor }} \
+            SCREENSHOT_WITH_BACKEND=${{ vars.SCREENSHOT_WITH_BACKEND || 'true' }} \
+            KOEL_HOST='${{ secrets.KOEL_HOST }}' \
+            KOEL_EMAIL='${{ secrets.KOEL_EMAIL }}' \
+            KOEL_PASSWORD='${{ secrets.KOEL_PASSWORD }}' \
+            SCREENSHOT_SEARCH_TERM='${{ vars.SCREENSHOT_SEARCH_TERM || 'zamba' }}' \
+            make integration-screenshots-ci
+
+      - name: Upload PNG artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-screenshots-${{ matrix.form_factor }}
+          path: |
+            build/integration_test/**/*.png
+            integration_test/**/*.png
+          if-no-files-found: ignore

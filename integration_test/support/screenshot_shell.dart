@@ -1,27 +1,27 @@
 import 'package:app/constants/constants.dart';
-import 'package:app/router.dart';
-import 'package:app/ui/screens/screens.dart';
+import 'package:app/ui/app.dart';
 import 'package:app/ui/theme_data.dart';
 import 'package:app/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+/// [MaterialApp] shell matching production theme/l10n, with an explicit [home]
+/// so integration tests skip [InitialScreen] / login / loading.
+///
+/// When built with `--dart-define=SCREENSHOT_MODE=true`, matches [App] stability
+/// tweaks (text scale, [TickerMode] applied by the test harness).
+class ScreenshotShellApp extends StatelessWidget {
+  const ScreenshotShellApp({
+    Key? key,
+    required this.home,
+  }) : super(key: key);
 
-  /// UI más estable para capturas (`--dart-define=SCREENSHOT_MODE=true`).
-  static const bool kScreenshotMode = bool.fromEnvironment(
-    'SCREENSHOT_MODE',
-    defaultValue: false,
-  );
+  final Widget home;
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    Widget tree = Material(
+    return Material(
       color: Colors.transparent,
       child: GradientDecoratedContainer(
         child: MaterialApp(
@@ -35,11 +35,10 @@ class App extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          initialRoute: InitialScreen.routeName,
-          routes: AppRouter.routes,
+          home: home,
           builder: (context, child) {
             final Widget content = child ?? const SizedBox.shrink();
-            if (!kScreenshotMode) {
+            if (!App.kScreenshotMode) {
               return content;
             }
             final MediaQueryData mq = MediaQuery.of(context);
@@ -51,14 +50,5 @@ class App extends StatelessWidget {
         ),
       ),
     );
-
-    if (kScreenshotMode) {
-      tree = TickerMode(
-        enabled: false,
-        child: tree,
-      );
-    }
-
-    return tree;
   }
 }
