@@ -55,6 +55,33 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Build dart-define JSON
+        env:
+          FORM_FACTOR: ${{ matrix.form_factor }}
+          SCREENSHOT_WITH_BACKEND: ${{ vars.SCREENSHOT_WITH_BACKEND || 'true' }}
+          KOEL_HOST: ${{ secrets.KOEL_HOST }}
+          KOEL_EMAIL: ${{ secrets.KOEL_EMAIL }}
+          KOEL_PASSWORD: ${{ secrets.KOEL_PASSWORD }}
+          SCREENSHOT_SEARCH_TERM: ${{ vars.SCREENSHOT_SEARCH_TERM || 'zamba' }}
+        run: |
+          jq -n \
+            --arg form_factor "$FORM_FACTOR" \
+            --arg with_backend "$SCREENSHOT_WITH_BACKEND" \
+            --arg host "$KOEL_HOST" \
+            --arg email "$KOEL_EMAIL" \
+            --arg password "$KOEL_PASSWORD" \
+            --arg search "$SCREENSHOT_SEARCH_TERM" \
+            '{
+              INTEGRATION_TEST: "true",
+              SCREENSHOT_MODE: "true",
+              FORM_FACTOR: $form_factor,
+              SCREENSHOT_WITH_BACKEND: $with_backend,
+              KOEL_HOST: $host,
+              KOEL_EMAIL: $email,
+              KOEL_PASSWORD: $password,
+              SCREENSHOT_SEARCH_TERM: $search
+            }' > screenshot_defines.json
+
       - name: Run integration screenshot test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -62,14 +89,7 @@ jobs:
           arch: x86_64
           profile: ${{ matrix.profile }}
           disable-animations: true
-          script: >-
-            FORM_FACTOR=${{ matrix.form_factor }}
-            SCREENSHOT_WITH_BACKEND=${{ vars.SCREENSHOT_WITH_BACKEND || 'true' }}
-            KOEL_HOST='${{ secrets.KOEL_HOST }}'
-            KOEL_EMAIL='${{ secrets.KOEL_EMAIL }}'
-            KOEL_PASSWORD='${{ secrets.KOEL_PASSWORD }}'
-            SCREENSHOT_SEARCH_TERM='${{ vars.SCREENSHOT_SEARCH_TERM || 'zamba' }}'
-            make integration-screenshots-ci
+          script: make integration-screenshots-ci
 
       - name: Upload PNG artifacts
         if: always()

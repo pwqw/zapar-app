@@ -87,7 +87,7 @@ web-build-docker:
 		$(IMAGE_NAME) \
 		sh -lc "flutter pub get && flutter build web --release"
 
-analyze-docker: ## flutter analyze en imagen koel-dev (warnings/info no fallan el exit code)
+analyze: ## flutter analyze en imagen koel-dev (warnings/info no fallan el exit code)
 	docker run --rm \
 		-v $(PWD):/app \
 		-v $(DART_TOOL_VOLUME):/app/.dart_tool \
@@ -126,14 +126,7 @@ test: ## Tests en Docker (build_runner + flutter test)
 integration-screenshots-ci: ## flutter test integration_test/screenshot_journey_test.dart (host con Android)
 	flutter pub get
 	flutter test integration_test/screenshot_journey_test.dart \
-		--dart-define=INTEGRATION_TEST=true \
-		--dart-define=SCREENSHOT_MODE=true \
-		--dart-define="FORM_FACTOR=$${FORM_FACTOR:-phone}" \
-		--dart-define="SCREENSHOT_WITH_BACKEND=$${SCREENSHOT_WITH_BACKEND:-false}" \
-		--dart-define="KOEL_HOST=$${KOEL_HOST}" \
-		--dart-define="KOEL_EMAIL=$${KOEL_EMAIL}" \
-		--dart-define="KOEL_PASSWORD=$${KOEL_PASSWORD}" \
-		--dart-define="SCREENSHOT_SEARCH_TERM=$${SCREENSHOT_SEARCH_TERM:-zamba}"
+		--dart-define-from-file=screenshot_defines.json
 
 # Misma convención Docker que `test`; fallará en la imagen actual sin Android SDK — usar integration-screenshots-ci o CI.
 integration-screenshots: ## integration_test screenshots en Docker (requiere imagen con Android o fallo al compilar APK)

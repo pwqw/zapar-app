@@ -57,3 +57,4 @@ app.*.map.json
 # Fork: overrides locales (Makefile, Gradle); ver .env.example
 /.env
 
+screenshot_defines.json
