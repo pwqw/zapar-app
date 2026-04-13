@@ -45,6 +45,12 @@ class AlbumArtistThumbnail extends StatelessWidget {
             placeholder: (_, __) => AppImages.defaultImage,
             errorWidget: (_, __, ___) => AppImages.defaultImage,
             imageUrl: imageUrl,
+            fadeInDuration: const bool.fromEnvironment('SCREENSHOT_MODE')
+                ? Duration.zero
+                : const Duration(milliseconds: 500),
+            fadeOutDuration: const bool.fromEnvironment('SCREENSHOT_MODE')
+                ? Duration.zero
+                : const Duration(milliseconds: 1000),
           );
 
     final heroChild = asHero
