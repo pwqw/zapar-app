@@ -2,7 +2,6 @@ import 'package:app/app_providers.dart';
 import 'package:app/env/integration_test_env.dart';
 import 'package:app/main.dart';
 import 'package:app/providers/providers.dart';
-import 'package:app/ui/app.dart';
 import 'package:app/ui/screens/main.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -84,15 +83,9 @@ void main() {
       if (lastError != null) throw lastError;
     }
 
-    Widget shell = const ScreenshotShellApp(
+    const Widget shell = ScreenshotShellApp(
       home: MainScreen(),
     );
-    if (App.kScreenshotMode) {
-      shell = TickerMode(
-        enabled: false,
-        child: shell,
-      );
-    }
 
     await tester.pumpWidget(
       MultiProvider(
