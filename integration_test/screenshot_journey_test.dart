@@ -46,6 +46,9 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('screenshot journey', (WidgetTester tester) async {
+    // Tablets arrancan en landscape; forzar portrait antes de cualquier render.
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
     const String formFactor = String.fromEnvironment(
       'FORM_FACTOR',
       defaultValue: 'phone',

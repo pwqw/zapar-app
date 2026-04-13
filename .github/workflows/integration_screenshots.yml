@@ -21,8 +21,10 @@ jobs:
         include:
           - form_factor: phone
             profile: pixel_6
-          - form_factor: tablet
-            profile: '10.1in WXGA (Tablet)'
+          - form_factor: tablet7
+            profile: 'Nexus 7 2013'
+          - form_factor: tablet10
+            profile: 'Nexus 10'
 
     steps:
       - uses: actions/checkout@v5
