@@ -24,7 +24,7 @@ jobs:
           - form_factor: tablet7
             profile: 'Nexus 7 2013'
           - form_factor: tablet10
-            profile: 'Nexus 10'
+            profile: 'Nexus 6'
 
     steps:
       - uses: actions/checkout@v5
