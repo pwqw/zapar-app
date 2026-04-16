@@ -92,7 +92,12 @@ jobs:
           arch: x86_64
           profile: ${{ matrix.profile }}
           disable-animations: true
-          script: make integration-screenshots-ci
+          script: |
+            flutter pub get
+            flutter drive \
+              --driver=test_driver/integration_test.dart \
+              --target=integration_test/screenshot_journey_test.dart \
+              --dart-define-from-file=screenshot_defines.json
 
       - name: Upload PNG artifacts
         if: always()
