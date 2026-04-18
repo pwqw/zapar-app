@@ -58,17 +58,7 @@ jobs:
             --pattern 'app-release.aab' \
             --dir release-assets
 
-      # beta = open testing ("Prueba abierta"). draft = no publica a testers hasta revisar en consola.
-      - name: Upload to Play Store (open testing)
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
-          packageName: ${{ secrets.PACKAGE_NAME }}
-          releaseFiles: release-assets/app-release.aab
-          track: beta
-          status: draft
-
-      # internal = internal testing ("Prueba interna"). completed = release activo para la lista de testers internos.
+      # internal = internal testing ("Prueba interna"). completed = release activo para testers internos.
       - name: Upload to Play Store (internal testing — published)
         uses: r0adkll/upload-google-play@v1
         with:
