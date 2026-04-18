@@ -1,7 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="phanan.koel.app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.koel.player">
 
     <application
-        android:label="Koel"
+        android:label="${appLabel}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">

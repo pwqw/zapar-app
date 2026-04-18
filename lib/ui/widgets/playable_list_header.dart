@@ -127,7 +127,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
                       height: 48,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color.fromRGBO(25, 0, 64, .5),
+                          color: Color.fromRGBO(0, 30, 15, .5),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: t < 0.3
@@ -193,7 +193,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
                             height: 48,
                             child: CupertinoButton(
                               padding: EdgeInsets.zero,
-                              color: Color.fromRGBO(25, 0, 64, .5),
+                              color: Color.fromRGBO(0, 30, 15, .5),
                               borderRadius: BorderRadius.circular(100),
                               onPressed: _searching ? null : onPlayPressed,
                               child: Row(
@@ -219,7 +219,7 @@ class _PlayableListHeaderState extends State<PlayableListHeader>
                             height: 48,
                             child: CupertinoButton(
                               padding: EdgeInsets.zero,
-                              color: Color.fromRGBO(25, 0, 64, .5),
+                              color: Color.fromRGBO(0, 30, 15, .5),
                               borderRadius: BorderRadius.circular(100),
                               onPressed: _searching ? null : onShufflePressed,
                               child: Row(

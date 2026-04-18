@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:app/mixins/stream_subscriber.dart';
+import 'package:flutter/foundation.dart';
 import 'package:app/models/models.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/utils/crypto.dart';
@@ -66,16 +67,18 @@ class DownloadProvider with StreamSubscriber {
     final serializedPlayables =
         _playableStorage.read<List<dynamic>>(serializedPlayableKey) ?? [];
 
-    var downloadsDir = await this.downloadsDir;
+    if (!kIsWeb) {
+      var downloadsDir = await this.downloadsDir;
 
-    serializedPlayables.forEach((json) {
-      var playable = Playable.fromJson(json);
-      final file = _localFile(downloadsDir, playable);
+      serializedPlayables.forEach((json) {
+        var playable = Playable.fromJson(json);
+        final file = _localFile(downloadsDir, playable);
 
-      if (file.existsSync() && !_downloads.any((d) => d.playable == playable)) {
-        _downloads.add(Download(playable: playable, path: file.path));
-      }
-    });
+        if (file.existsSync() && !_downloads.any((d) => d.playable == playable)) {
+          _downloads.add(Download(playable: playable, path: file.path));
+        }
+      });
+    }
 
     _playableProvider.syncWithVault(this.playables);
   }
@@ -90,6 +93,8 @@ class DownloadProvider with StreamSubscriber {
       '${preferences.host}.${preferences.userEmail}.songs';
 
   Future<void> download({required Playable playable}) async {
+    if (kIsWeb) return;
+
     var client = HttpClient();
     var targetDir = Directory(await downloadsDir);
 

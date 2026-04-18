@@ -267,7 +267,7 @@ class FormDropdown<T> extends StatelessWidget {
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          dropdownColor: const Color(0xFF2C2C2E),
+          dropdownColor: const Color(0xFF0D1F12),
           borderRadius: BorderRadius.circular(8),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           icon: Icon(icon, size: 12, color: CupertinoColors.systemGrey),

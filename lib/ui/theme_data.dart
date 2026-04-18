@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:app/constants/constants.dart';
+import 'package:app/utils/platform_compat.dart';
 import 'package:app/utils/full_width_slider_track_shape.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
@@ -22,10 +21,14 @@ ThemeData themeData(BuildContext context) {
     scaffoldBackgroundColor: Colors.transparent,
     colorScheme: ColorScheme.dark(
       surface: AppColors.background,
+      primary: AppColors.highlight,
+      onPrimary: Colors.black,
+      secondary: AppColors.highlight,
+      onSecondary: Colors.black,
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: AppColors.black.withOpacity(.3),
-      shape: Platform.isIOS
+      shape: isIOSDevice
           ? SmoothRectangleBorder(
               borderRadius: SmoothBorderRadius(
                 cornerRadius: 32,
@@ -39,7 +42,7 @@ ThemeData themeData(BuildContext context) {
     popupMenuTheme: PopupMenuThemeData(
       shadowColor: Colors.transparent,
       elevation: 0,
-      color: const Color(0xFF1B0047),
+      color: const Color(0xFF0D1F12),
       shape: SmoothRectangleBorder(
         borderRadius: SmoothBorderRadius(
           cornerRadius: 8,
@@ -136,7 +139,7 @@ ThemeData themeData(BuildContext context) {
           ),
         ),
         backgroundColor: WidgetStateProperty.all(AppColors.highlight),
-        foregroundColor: WidgetStateProperty.all(AppColors.white),
+        foregroundColor: WidgetStateProperty.all(Colors.black),
         overlayColor: WidgetStateProperty.all(AppColors.highlightAccent),
         elevation: WidgetStateProperty.all(0),
         padding: WidgetStateProperty.all(AppDimensions.inputPadding),

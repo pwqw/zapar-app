@@ -75,9 +75,10 @@ class PlaceholderCard extends StatelessWidget {
         dimension: dimension,
         child: ElevatedButton(
           onPressed: onPressed,
-          child: Icon(icon, size: 32),
+          child: Icon(icon, size: 32, color: Colors.black),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.highlight,
+            foregroundColor: Colors.black,
           ),
         ),
       ),

@@ -3,8 +3,10 @@ import 'package:app/exceptions/exceptions.dart';
 import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/providers/providers.dart';
 import 'package:app/ui/screens/screens.dart';
+import 'package:app/ui/widgets/google_sign_in_button.dart';
 import 'package:app/ui/widgets/qr_login_button.dart';
 import 'package:app/ui/widgets/widgets.dart';
+import 'package:app/utils/api_request.dart' as api;
 import 'package:app/utils/preferences.dart' as preferences;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,14 +23,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
+  static const _host = String.fromEnvironment(
+    'KOEL_HOST',
+    defaultValue: 'https://localhost',
+  );
+
   final formKey = GlobalKey<FormState>();
   var _authenticating = false;
+  var _googleAuthenticating = false;
   var _showPassword = false;
+  var _logoTapCount = 0;
   late final AuthProvider _auth;
 
   late String _email;
   late String _password;
-  late String _host;
+
+  Map<String, dynamic>? _appData;
 
   @override
   void initState() {
@@ -37,9 +47,22 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
 
     // Try looking for stored values in local storage
     setState(() {
-      _host = preferences.host ?? '';
       _email = preferences.userEmail ?? '';
     });
+
+    _fetchAppData();
+  }
+
+  Future<void> _fetchAppData() async {
+    try {
+      preferences.host = _host;
+      final data = await api.get('app-data');
+      if (mounted && data is Map<String, dynamic>) {
+        setState(() => _appData = data);
+      }
+    } catch (_) {
+      // Silently fail — legal URLs will be fetched from consent response as fallback
+    }
   }
 
   @override
@@ -67,16 +90,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     );
   }
 
-  String standardizeHost(String host) {
-    host = host.trim().replaceAll(RegExp(r'/+$'), '');
-
-    if (!host.startsWith("http://") && !host.startsWith("https://")) {
-      host = "https://" + host;
-    }
-
-    return host;
-  }
-
   void redirectToDataLoadingScreen() {
     Navigator.of(
       context,
@@ -94,7 +107,6 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     setState(() => _authenticating = true);
 
     try {
-      _host = standardizeHost(_host);
       await _auth.login(host: _host, email: _email, password: _password);
       await _auth.tryGetAuthUser();
       successful = true;
@@ -118,16 +130,68 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     }
   }
 
+  Future<void> attemptGoogleLogin() async {
+    setState(() => _googleAuthenticating = true);
+    var successful = false;
+
+    try {
+      final consentData = await _auth.loginWithGoogle();
+
+      if (consentData != null) {
+        // New user — navigate to consent screen
+        if (mounted) {
+          final rawSsoUser = consentData['sso_user'];
+          final rawLegalUrls = _appData?['legal_urls'] ?? consentData['legal_urls'];
+          if (rawSsoUser is! Map || rawLegalUrls is! Map) {
+            await showErrorDialog(
+              context,
+              message: 'Invalid Google consent response. Please try again.',
+            );
+            return;
+          }
+
+          await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => GoogleConsentScreen(
+                ssoUser: Map<String, dynamic>.from(rawSsoUser),
+                legalUrls: Map<String, dynamic>.from(rawLegalUrls),
+              ),
+            ),
+          );
+          // If consent screen handled login, it already navigated away
+          return;
+        }
+      } else {
+        await _auth.tryGetAuthUser();
+        successful = true;
+      }
+    } catch (e, stackTrace) {
+      if (e.toString().contains('cancelled')) {
+        // User cancelled — do nothing
+      } else {
+        assert(() {
+          debugPrint('attemptGoogleLogin: $e\n$stackTrace');
+          return true;
+        }());
+        await showErrorDialog(context);
+      }
+    } finally {
+      if (mounted) setState(() => _googleAuthenticating = false);
+    }
+
+    if (successful) {
+      redirectToDataLoadingScreen();
+    }
+  }
+
   Future<void> attemptLoginWithOtp({
-    required String host,
     required String token,
   }) async {
     var successful = false;
     setState(() => _authenticating = true);
 
     try {
-      host = standardizeHost(host);
-      await _auth.loginWithOneTimeToken(host: host, token: token);
+      await _auth.loginWithOneTimeToken(host: _host, token: token);
       await _auth.tryGetAuthUser();
       successful = true;
     } on HttpResponseException catch (error) {
@@ -143,15 +207,14 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
     }
 
     if (successful) {
-      preferences.host = host;
       redirectToDataLoadingScreen();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    String? requireValue(value) =>
-        value == null || value.isEmpty ? 'This field is required' : null;
+    String? requireValue(String? value) =>
+        value == null || value.trim().isEmpty ? 'This field is required' : null;
 
     return Scaffold(
       body: GradientDecoratedContainer(
@@ -166,19 +229,15 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   ...[
-                    Image.asset('assets/images/logo.png', width: 160),
-                    TextFormField(
-                      keyboardType: TextInputType.url,
-                      autocorrect: false,
-                      autofillHints: null,
-                      onChanged: (value) => _host = value,
-                      onSaved: (value) => _host = value ?? '',
-                      decoration: InputDecoration(
-                        labelText: 'Host',
-                        hintText: 'https://www.koel.music',
-                      ),
-                      controller: TextEditingController(text: _host),
-                      validator: requireValue,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => _logoTapCount++);
+                        if (_logoTapCount >= 5) {
+                          _logoTapCount = 0;
+                          Navigator.pushNamed(context, LogScreen.routeName);
+                        }
+                      },
+                      child: Image.asset('assets/images/logo.png', width: 160),
                     ),
                     TextFormField(
                       keyboardType: TextInputType.emailAddress,
@@ -226,14 +285,17 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                         onPressed: _authenticating ? null : attemptLogin,
                       ),
                     ),
-                    _authenticating
+                    GoogleSignInButton(
+                      onPressed: _authenticating || _googleAuthenticating
+                          ? null
+                          : attemptGoogleLogin,
+                      loading: _googleAuthenticating,
+                    ),
+                    _authenticating || _googleAuthenticating
                         ? SizedBox()
                         : QrLoginButton(
-                            onResult: ({
-                              required String host,
-                              required String token,
-                            }) {
-                              attemptLoginWithOtp(host: host, token: token);
+                            onResult: ({required String token}) {
+                              attemptLoginWithOtp(token: token);
                             },
                           ),
                   ].expand((widget) => [widget, const SizedBox(height: 12)]),

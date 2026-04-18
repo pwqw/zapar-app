@@ -1,96 +1,21 @@
 import 'dart:async';
 
-import 'package:app/audio_handler.dart';
-import 'package:app/providers/providers.dart';
+import 'audio_handler.dart' if (dart.library.html) 'audio_handler_stub.dart';
+import 'package:app/app_providers.dart';
+import 'package:app/services/log_service.dart';
 import 'package:app/ui/app.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
+
+import 'providers/download_provider.dart';
 
 late KoelAudioHandler audioHandler;
 
-List<SingleChildWidget> _providers = [
-  Provider(create: (_) => AuthProvider()),
-  ChangeNotifierProvider(create: (_) => ArtistProvider()),
-  ChangeNotifierProvider(create: (context) => PlayableProvider()),
-  Provider(create: (_) => MediaInfoProvider()),
-  // Download files should always be available to adapt to login/logout and
-  // offline mode.
-  Provider(
-      create: (context) => DownloadProvider(
-            playableProvider: context.read<PlayableProvider>(),
-          ),
-      lazy: false),
-  ChangeNotifierProvider(create: (context) => AlbumProvider()),
-  ChangeNotifierProvider(
-    create: (context) => FavoriteProvider(
-      playableProvider: context.read<PlayableProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => RecentlyPlayedProvider(
-      playableProvider: context.read<PlayableProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => InteractionProvider(
-      playableProvider: context.read<PlayableProvider>(),
-      recentlyPlayedProvider: context.read<RecentlyPlayedProvider>(),
-    ),
-    // By setting lazy to false, we ensure that the provider is initialized
-    // before the app is launched. This makes sure that the provider listens
-    // to the audio handler's state changes.
-    lazy: false,
-  ),
-  ChangeNotifierProvider(
-    create: (context) => PlaylistProvider(),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => PlaylistFolderProvider(),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => SearchProvider(
-      playableProvider: context.read<PlayableProvider>(),
-      artistProvider: context.read<ArtistProvider>(),
-      albumProvider: context.read<AlbumProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => DataProvider(
-      playlistProvider: context.read<PlaylistProvider>(),
-      playlistFolderProvider: context.read<PlaylistFolderProvider>(),
-      playableProvider: context.read<PlayableProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => OverviewProvider(
-      playableProvider: context.read<PlayableProvider>(),
-      albumProvider: context.read<AlbumProvider>(),
-      artistProvider: context.read<ArtistProvider>(),
-      recentlyPlayedProvider: context.read<RecentlyPlayedProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(
-    create: (context) => DownloadSyncProvider(
-      downloadProvider: context.read<DownloadProvider>(),
-      playableProvider: context.read<PlayableProvider>(),
-    ),
-  ),
-  ChangeNotifierProvider(create: (context) => PodcastProvider()),
-  ChangeNotifierProvider(create: (context) => GenreProvider()),
-  ChangeNotifierProvider(create: (context) => RadioStationProvider()),
-  ChangeNotifierProvider(create: (context) => RadioPlayerProvider()),
-  ChangeNotifierProvider(
-    create: (context) => PlayableListScreenProvider(
-      playableProvider: context.read<PlayableProvider>(),
-      searchProvider: context.read<SearchProvider>(),
-    ),
-  ),
-];
-
-Future<void> main() async {
+/// Shared startup (storage + audio service) for production and integration tests.
+Future<void> bootstrapKoelApplication() async {
   audioHandler = await AudioService.init(
     builder: () => KoelAudioHandler(),
     config: AudioServiceConfig(
@@ -102,11 +27,27 @@ Future<void> main() async {
 
   await GetStorage.init('Preferences');
   await GetStorage.init(DownloadProvider.serializedPlayableContainer);
+  await GetStorage.init(LogService.storageBoxName);
+}
 
-  runApp(
-    MultiProvider(
-      providers: _providers,
-      child: const App(),
-    ),
+Future<void> main() async {
+  await bootstrapKoelApplication();
+  LogService.instance.loadFromStorage();
+
+  FlutterError.onError = (details) {
+    LogService.instance.record(details.exception, details.stack);
+    FlutterError.presentError(details);
+  };
+
+  runZonedGuarded(
+    () {
+      runApp(
+        MultiProvider(
+          providers: buildKoelSingleChildProviders(),
+          child: const App(),
+        ),
+      );
+    },
+    (error, stack) => LogService.instance.record(error, stack),
   );
 }
