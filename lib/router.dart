@@ -27,6 +27,7 @@ class AppRouter {
     DataLoadingScreen.routeName: (_) => const DataLoadingScreen(),
     DownloadedScreen.routeName: (_) => DownloadedScreen(),
     RecentlyPlayedScreen.routeName: (_) => const RecentlyPlayedScreen(),
+    LogScreen.routeName: (_) => const LogScreen(),
   };
 
   Future<void> gotoAlbumDetailsScreen(

@@ -1,5 +1,6 @@
 import 'package:app/constants/constants.dart';
 import 'package:app/router.dart';
+import 'package:app/services/log_service.dart';
 import 'package:app/ui/screens/screens.dart';
 import 'package:app/ui/theme_data.dart';
 import 'package:app/ui/widgets/widgets.dart';
@@ -7,6 +8,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+class _AppRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    LogService.instance.setCurrentScreen(route.settings.name ?? 'unknown');
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    LogService.instance.setCurrentScreen(previousRoute?.settings.name ?? 'unknown');
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (newRoute != null) {
+      LogService.instance.setCurrentScreen(newRoute.settings.name ?? 'unknown');
+    }
+  }
+}
 
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
@@ -37,6 +57,7 @@ class App extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           initialRoute: InitialScreen.routeName,
           routes: AppRouter.routes,
+          navigatorObservers: <NavigatorObserver>[_AppRouteObserver()],
           builder: (context, child) {
             final Widget content = child ?? const SizedBox.shrink();
             if (!kScreenshotMode) {

@@ -25,6 +25,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   static const tabBarHeight = 60.0;
   int _selectedIndex = 0;
+  var _libraryTapCount = 0;
   var _isOffline = AppState.get('mode', AppMode.online) == AppMode.offline;
 
   final _navigatorKeys = List.generate(
@@ -39,6 +40,17 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   void _onItemTapped(int index) {
+    if (index == 2) {
+      _libraryTapCount++;
+      if (_libraryTapCount >= 5) {
+        _libraryTapCount = 0;
+        Navigator.pushNamed(context, LogScreen.routeName);
+        return;
+      }
+    } else {
+      _libraryTapCount = 0;
+    }
+
     if (index == _selectedIndex) {
       _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
     } else {

@@ -16,6 +16,7 @@ export 'home.dart';
 export 'info_sheet/info_sheet.dart';
 export 'initial.dart';
 export 'library.dart';
+export 'log_screen.dart';
 export 'login.dart';
 export 'main.dart';
 export 'no_connection.dart';

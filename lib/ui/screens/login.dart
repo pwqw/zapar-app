@@ -32,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
   var _authenticating = false;
   var _googleAuthenticating = false;
   var _showPassword = false;
+  var _logoTapCount = 0;
   late final AuthProvider _auth;
 
   late String _email;
@@ -228,7 +229,16 @@ class _LoginScreenState extends State<LoginScreen> with StreamSubscriber {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   ...[
-                    Image.asset('assets/images/logo.png', width: 160),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => _logoTapCount++);
+                        if (_logoTapCount >= 5) {
+                          _logoTapCount = 0;
+                          Navigator.pushNamed(context, LogScreen.routeName);
+                        }
+                      },
+                      child: Image.asset('assets/images/logo.png', width: 160),
+                    ),
                     TextFormField(
                       keyboardType: TextInputType.emailAddress,
                       autocorrect: false,
