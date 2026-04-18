@@ -2,7 +2,6 @@ import 'package:app/env/integration_test_env.dart';
 import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/models/models.dart';
 import 'package:app/providers/providers.dart';
-import 'package:app/services/log_service.dart';
 import 'package:app/utils/api_request.dart';
 import 'package:flutter/foundation.dart';
 
@@ -53,20 +52,6 @@ class OverviewProvider with ChangeNotifier, StreamSubscriber {
     }
 
     final Map<String, dynamic> response = await get('overview');
-
-    int _len(dynamic v) => v is List ? v.length : -1;
-    LogService.instance.record(
-      'overview response counts',
-      null,
-      extras: {
-        'keys': response.keys.toList(),
-        'most_played_songs': _len(response['most_played_songs']),
-        'recently_added_songs': _len(response['recently_added_songs']),
-        'recently_played_songs': _len(response['recently_played_songs']),
-        'most_played_albums': _len(response['most_played_albums']),
-        'most_played_artists': _len(response['most_played_artists']),
-      },
-    );
 
     mostPlayedSongs
       ..clear()
