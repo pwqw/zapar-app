@@ -94,10 +94,7 @@ jobs:
           disable-animations: true
           script: |
             flutter pub get
-            flutter drive \
-              --driver=test_driver/integration_test.dart \
-              --target=integration_test/screenshot_journey_test.dart \
-              --dart-define-from-file=screenshot_defines.json
+            flutter drive --driver=test_driver/integration_test.dart --target=integration_test/screenshot_journey_test.dart --dart-define-from-file=screenshot_defines.json
 
       - name: Upload PNG artifacts
         if: always()
