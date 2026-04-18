@@ -1,8 +1,8 @@
-.PHONY: help build docker-build dev dev-live dev-static docker-run docker-shell web-build analyze web-serve test integration-screenshots stop clean clean-docker logs shell reload restart cache-list cache-prune cache-prune-all
+.PHONY: help build dev reload restart shell analyze test stop clean logs volumes-list volumes-prune-old volumes-prune-all
 
 -include .env
 
-FLUTTER_VERSION := 3.27.4
+FLUTTER_VERSION := 3.29.3
 LOCK_HASH := $(shell shasum -a 256 pubspec.lock | awk '{print substr($$1,1,12)}')
 VOLUME_SUFFIX := $(FLUTTER_VERSION)-$(LOCK_HASH)
 
