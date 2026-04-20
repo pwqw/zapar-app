@@ -5,7 +5,6 @@ import 'package:app/app_providers.dart';
 import 'package:app/services/log_service.dart';
 import 'package:app/ui/app.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
