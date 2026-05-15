@@ -1,0 +1,94 @@
+diff --git a/.dockerignore b/.dockerignore
+new file mode 100644
+index 0000000..a934970
+--- /dev/null
++++ b/.dockerignore
+@@ -0,0 +1,17 @@
++# Optimizar build context
++
++.git
++.gitignore
++.github
++*.md
++docs/
++
++.dart_tool/
++build/
++.flutter-plugins
++.flutter-plugins-dependencies
++
++.idea
++.vscode
++*.swp
++*.log
+diff --git a/Dockerfile b/Dockerfile
+new file mode 100644
+index 0000000..6c1c7a5
+--- /dev/null
++++ b/Dockerfile
+@@ -0,0 +1,40 @@
++# syntax=docker/dockerfile:1
++
++# Build Flutter app in container
++FROM debian:bookworm
++
++# Install system dependencies
++RUN apt-get update && apt-get install -y \
++    git \
++    curl \
++    unzip \
++    xz-utils \
++    build-essential \
++    libglu1-mesa \
++    libstdc++-12-dev \
++    && rm -rf /var/lib/apt/lists/*
++
++# Install Flutter SDK
++WORKDIR /opt
++RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1
++ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:$PATH"
++
++# Pre-download platform tooling
++RUN flutter precache
++
++# Create app directory
++WORKDIR /app
++
++# Copy pubspec files (cache dependencies)
++COPY pubspec.yaml pubspec.lock ./
++
++# Get dependencies
++RUN flutter pub get
++
++# Copy entire app
++COPY . .
++
++# Build & run
++EXPOSE 8080
++CMD ["flutter", "run", "-d", "chrome", "--web-port=8080"]
+diff --git a/Makefile b/Makefile
+new file mode 100644
+index 0000000..3c6d7d7
+--- /dev/null
++++ b/Makefile
+@@ -0,0 +1,20 @@
++.PHONY: docker-build docker-run docker-shell web-build web-serve clean
++
++docker-build:
++	docker build -t zapar-dev .
++
++docker-run:
++	docker run -it --rm zapar-dev
++
++docker-shell:
++	docker run -it --rm -v $(PWD):/app zapar-dev /bin/bash
++
++web-build:
++	flutter build web --release
++
++web-serve:
++	flutter run -d chrome --web-port=8080
++
++clean:
++	flutter clean
++	rm -rf build/ web/

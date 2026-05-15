@@ -1,0 +1,81 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+new file mode 100644
+index 0000000..abc1234
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,20 @@
++name: CI
++
++on:
++  push:
++    branches: [master, develop]
++  pull_request:
++    branches: [master, develop]
++
++jobs:
++  analyze_and_test:
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v3
++      - uses: subosito/flutter-action@v2
++        with:
++          flutter-version: '3.16.x'
++      - run: flutter pub get
++      - run: flutter analyze
++      - run: flutter test
+diff --git a/.github/workflows/build-deploy.yml b/.github/workflows/build-deploy.yml
+new file mode 100644
+index 0000000..def5678
+--- /dev/null
++++ b/.github/workflows/build-deploy.yml
+@@ -0,0 +1,50 @@
++name: Build & Deploy to Play Store
++
++on:
++  push:
++    tags:
++      - 'v*'
++
++jobs:
++  build_release:
++    runs-on: ubuntu-latest
++    environment: PlayStore
++    steps:
++      - uses: actions/checkout@v3
++      - uses: subosito/flutter-action@v2
++        with:
++          flutter-version: '3.16.x'
++      - uses: actions/setup-java@v3
++        with:
++          distribution: 'temurin'
++          java-version: '17'
++
++      - name: Setup signing
++        run: |
++          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
++          cat > android/key.properties << EOF
++          storeFile=upload-keystore.jks
++          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
++          keyAlias=${{ secrets.KEY_ALIAS }}
++          keyPassword=${{ secrets.KEY_PASSWORD }}
++          EOF
++
++      - name: Build AppBundle
++        run: flutter build appbundle --release
++
++      - name: Upload to Play Store (beta)
++        uses: r0adkll/upload-google-play@v1
++        with:
++          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
++          packageName: ${{ secrets.PACKAGE_NAME }}
++          releaseFiles: 'build/app/outputs/bundle/release/app-release.aab'
++          track: beta
++          status: completed
++
++      - name: Create Release
++        uses: actions/create-release@v1
++        env:
++          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
++        with:
++          tag_name: ${{ github.ref }}
++          release_name: Release ${{ github.ref_name }}
