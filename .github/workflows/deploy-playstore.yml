@@ -49,7 +49,31 @@ jobs:
       group: playstore-${{ needs.resolve_release_tag.outputs.tag }}
       cancel-in-progress: false
     steps:
-      - name: Download release bundle
+      - name: Download AAB artifact
+        if: github.event_name == 'workflow_call'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-aab
+          path: release-assets
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+
+      - name: Verify AAB artifact
+        if: github.event_name == 'workflow_call'
+        run: |
+          ls -laR release-assets/
+          if [ ! -f release-assets/app-release.aab ]; then
+            AAB="$(find release-assets -name 'app-release.aab' -print -quit)"
+            if [ -z "$AAB" ]; then
+              echo "AAB not found under release-assets/" >&2
+              exit 1
+            fi
+            cp "$AAB" release-assets/app-release.aab
+          fi
+          ls -lh release-assets/app-release.aab
+
+      - name: Download release bundle (manual)
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
