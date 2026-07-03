@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  build_aab:
+  build_and_release:
     runs-on: ubuntu-latest
     environment: PlayStore
     steps:
@@ -44,49 +44,6 @@ jobs:
           ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
           ORG_GRADLE_PROJECT_PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
 
-      - name: Stage AAB for artifact
-        run: |
-          mkdir -p release-assets
-          cp build/app/outputs/bundle/release/app-release.aab release-assets/
-
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-aab
-          path: release-assets/
-          retention-days: 1
-
-  deploy_playstore:
-    needs: build_aab
-    uses: ./.github/workflows/deploy-playstore.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets: inherit
-
-  build_apk_and_release:
-    needs: deploy_playstore
-    runs-on: ubuntu-latest
-    environment: PlayStore
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup Android release environment
-        id: setup
-        uses: ./.github/actions/android-release-setup
-        with:
-          keystore_base64: ${{ secrets.KEYSTORE_BASE64 }}
-          keystore_password: ${{ secrets.KEYSTORE_PASSWORD }}
-          key_alias: ${{ secrets.KEY_ALIAS }}
-          key_password: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Restore dependency cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            ~/.gradle/caches
-          key: android-deps-${{ hashFiles('pubspec.lock', 'android/**/*.gradle*') }}
-
       - name: Build APK
         run: >
           flutter build apk --release
@@ -98,15 +55,29 @@ jobs:
           ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
           ORG_GRADLE_PROJECT_PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
 
-      - name: Verify APK output
+      - name: Verify build outputs
         run: |
+          AAB="build/app/outputs/bundle/release/app-release.aab"
           APK="build/app/outputs/flutter-apk/app-release.apk"
+          if [ ! -f "$AAB" ]; then
+            echo "AAB not found at $AAB" >&2
+            exit 1
+          fi
           if [ ! -f "$APK" ]; then
-            echo "Expected universal APK not found at $APK" >&2
+            echo "APK not found at $APK" >&2
             ls -la build/app/outputs/flutter-apk/ || true
             exit 1
           fi
-          ls -lh "$APK"
+          ls -lh "$AAB" "$APK"
+
+      - name: Upload to Play Store (internal testing — published)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: ${{ secrets.PACKAGE_NAME }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
 
       - name: Create GitHub Release
         env:
