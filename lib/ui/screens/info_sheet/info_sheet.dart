@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:app/constants/constants.dart';
 import 'package:app/models/models.dart';
 import 'package:app/ui/screens/info_sheet/album_info_pane.dart';
 import 'package:app/ui/screens/info_sheet/artist_info_pane.dart';
 import 'package:app/ui/screens/info_sheet/lyrics_pane.dart';
 import 'package:app/ui/widgets/widgets.dart' hide AppBar;
+import 'package:app/utils/platform_compat.dart';
 import 'package:fading_edge_scrollview/fading_edge_scrollview.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +137,7 @@ Future<void> showInfoSheet(BuildContext context, {required Playable playable}) {
         snapAnimationDuration: const Duration(milliseconds: 100),
         builder: (BuildContext context, ScrollController scrollController) {
           return ClipSmoothRect(
-            radius: Platform.isIOS
+            radius: isIOSDevice
                 ? SmoothBorderRadius(
                     cornerRadius: 32,
                     cornerSmoothing: .5,

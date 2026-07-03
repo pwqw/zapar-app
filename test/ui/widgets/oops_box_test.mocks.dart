@@ -22,15 +22,11 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 class _FakeUser_0 extends _i1.SmartFake implements _i2.User {
-  _FakeUser_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeUser_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [AuthProvider].
@@ -42,13 +38,12 @@ class MockAuthProvider extends _i1.Mock implements _i3.AuthProvider {
   }
 
   @override
-  _i2.User get authUser => (super.noSuchMethod(
-        Invocation.getter(#authUser),
-        returnValue: _FakeUser_0(
-          this,
-          Invocation.getter(#authUser),
-        ),
-      ) as _i2.User);
+  _i2.User get authUser =>
+      (super.noSuchMethod(
+            Invocation.getter(#authUser),
+            returnValue: _FakeUser_0(this, Invocation.getter(#authUser)),
+          )
+          as _i2.User);
 
   @override
   _i4.Future<void> login({
@@ -57,18 +52,15 @@ class MockAuthProvider extends _i1.Mock implements _i3.AuthProvider {
     required String? password,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #login,
-          [],
-          {
-            #host: host,
-            #email: email,
-            #password: password,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#login, [], {
+              #host: host,
+              #email: email,
+              #password: password,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> loginWithOneTimeToken({
@@ -76,61 +68,66 @@ class MockAuthProvider extends _i1.Mock implements _i3.AuthProvider {
     required String? token,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #loginWithOneTimeToken,
-          [],
-          {
-            #host: host,
-            #token: token,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#loginWithOneTimeToken, [], {
+              #host: host,
+              #token: token,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<Map<String, dynamic>?> loginWithGoogle() =>
+      (super.noSuchMethod(
+            Invocation.method(#loginWithGoogle, []),
+            returnValue: _i4.Future<Map<String, dynamic>?>.value(),
+          )
+          as _i4.Future<Map<String, dynamic>?>);
+
+  @override
+  _i4.Future<void> completeGoogleConsent({
+    required Map<String, dynamic>? ssoUser,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#completeGoogleConsent, [], {#ssoUser: ssoUser}),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   void setAuthUser(_i2.User? user) => super.noSuchMethod(
-        Invocation.method(
-          #setAuthUser,
-          [user],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#setAuthUser, [user]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  _i4.Future<_i2.User?> tryGetAuthUser() => (super.noSuchMethod(
-        Invocation.method(
-          #tryGetAuthUser,
-          [],
-        ),
-        returnValue: _i4.Future<_i2.User?>.value(),
-      ) as _i4.Future<_i2.User?>);
+  _i4.Future<_i2.User?> tryGetAuthUser() =>
+      (super.noSuchMethod(
+            Invocation.method(#tryGetAuthUser, []),
+            returnValue: _i4.Future<_i2.User?>.value(),
+          )
+          as _i4.Future<_i2.User?>);
 
   @override
-  _i4.Future<void> logout() => (super.noSuchMethod(
-        Invocation.method(
-          #logout,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> logout() =>
+      (super.noSuchMethod(
+            Invocation.method(#logout, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   void unsubscribeAll() => super.noSuchMethod(
-        Invocation.method(
-          #unsubscribeAll,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#unsubscribeAll, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void subscribe(_i4.StreamSubscription<dynamic>? sub) => super.noSuchMethod(
-        Invocation.method(
-          #subscribe,
-          [sub],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#subscribe, [sub]),
+    returnValueForMissingStub: null,
+  );
 }

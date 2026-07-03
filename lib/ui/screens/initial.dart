@@ -4,6 +4,7 @@ import 'package:app/ui/screens/screens.dart';
 import 'package:app/ui/widgets/widgets.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,15 +22,19 @@ class _InitialScreenState extends State<InitialScreen> with StreamSubscriber {
   void initState() {
     super.initState();
 
-    Connectivity().checkConnectivity().then((value) {
-      if (value == ConnectivityResult.none) {
-        Navigator.of(context).pushReplacementNamed(
-          NoConnectionScreen.routeName,
-        );
-      } else {
-        _resolveAuthenticatedUser();
-      }
-    });
+    if (kIsWeb) {
+      _resolveAuthenticatedUser();
+    } else {
+      Connectivity().checkConnectivity().then((value) {
+        if (value == ConnectivityResult.none) {
+          Navigator.of(context).pushReplacementNamed(
+            NoConnectionScreen.routeName,
+          );
+        } else {
+          _resolveAuthenticatedUser();
+        }
+      });
+    }
   }
 
   Future<void> _resolveAuthenticatedUser() async {

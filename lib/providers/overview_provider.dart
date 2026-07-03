@@ -1,3 +1,4 @@
+import 'package:app/env/integration_test_env.dart';
 import 'package:app/mixins/stream_subscriber.dart';
 import 'package:app/models/models.dart';
 import 'package:app/providers/providers.dart';
@@ -45,6 +46,11 @@ class OverviewProvider with ChangeNotifier, StreamSubscriber {
       mostPlayedArtists.isEmpty;
 
   Future<void> refresh() async {
+    if (kIntegrationTestSkipOverviewNetwork && !kScreenshotWithBackend) {
+      notifyListeners();
+      return;
+    }
+
     final Map<String, dynamic> response = await get('overview');
 
     mostPlayedSongs

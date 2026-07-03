@@ -90,7 +90,7 @@ class _MiniPlayerState extends State<MiniPlayer> with StreamSubscriber {
         child: FrostedGlassBackground(
           sigma: 20.0,
           child: Container(
-            color: Color.fromRGBO(25, 0, 64, .5),
+            color: Color.fromRGBO(0, 30, 15, .5),
             child: Column(
               mainAxisSize: MainAxisSize.max,
               children: [

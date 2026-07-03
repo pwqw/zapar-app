@@ -25,6 +25,7 @@ import 'package:mockito/src/dummies.dart' as _i4;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 /// A class which mocks [GenreProvider].
 ///
@@ -35,136 +36,110 @@ class MockGenreProvider extends _i1.Mock implements _i2.GenreProvider {
   }
 
   @override
-  List<_i3.Genre> get genres => (super.noSuchMethod(
-        Invocation.getter(#genres),
-        returnValue: <_i3.Genre>[],
-      ) as List<_i3.Genre>);
+  List<_i3.Genre> get genres =>
+      (super.noSuchMethod(
+            Invocation.getter(#genres),
+            returnValue: <_i3.Genre>[],
+          )
+          as List<_i3.Genre>);
 
   @override
-  String get sortField => (super.noSuchMethod(
-        Invocation.getter(#sortField),
-        returnValue: _i4.dummyValue<String>(
-          this,
-          Invocation.getter(#sortField),
-        ),
-      ) as String);
+  String get sortField =>
+      (super.noSuchMethod(
+            Invocation.getter(#sortField),
+            returnValue: _i4.dummyValue<String>(
+              this,
+              Invocation.getter(#sortField),
+            ),
+          )
+          as String);
 
   @override
-  _i5.SortOrder get sortOrder => (super.noSuchMethod(
-        Invocation.getter(#sortOrder),
-        returnValue: _i5.SortOrder.asc,
-      ) as _i5.SortOrder);
+  _i5.SortOrder get sortOrder =>
+      (super.noSuchMethod(
+            Invocation.getter(#sortOrder),
+            returnValue: _i5.SortOrder.asc,
+          )
+          as _i5.SortOrder);
 
   @override
-  set genres(List<_i3.Genre>? _genres) => super.noSuchMethod(
-        Invocation.setter(
-          #genres,
-          _genres,
-        ),
-        returnValueForMissingStub: null,
-      );
+  set genres(List<_i3.Genre>? value) => super.noSuchMethod(
+    Invocation.setter(#genres, value),
+    returnValueForMissingStub: null,
+  );
 
   @override
   set sortField(String? field) => super.noSuchMethod(
-        Invocation.setter(
-          #sortField,
-          field,
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.setter(#sortField, field),
+    returnValueForMissingStub: null,
+  );
 
   @override
   set sortOrder(_i5.SortOrder? order) => super.noSuchMethod(
-        Invocation.setter(
-          #sortOrder,
-          order,
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.setter(#sortOrder, order),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  bool get hasListeners => (super.noSuchMethod(
-        Invocation.getter(#hasListeners),
-        returnValue: false,
-      ) as bool);
+  bool get hasListeners =>
+      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
+          as bool);
 
   @override
-  _i3.Genre? byId(String? id) => (super.noSuchMethod(Invocation.method(
-        #byId,
-        [id],
-      )) as _i3.Genre?);
+  _i3.Genre? byId(String? id) =>
+      (super.noSuchMethod(Invocation.method(#byId, [id])) as _i3.Genre?);
 
   @override
-  _i6.Future<void> fetch() => (super.noSuchMethod(
-        Invocation.method(
-          #fetch,
-          [],
-        ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+  _i6.Future<void> fetch() =>
+      (super.noSuchMethod(
+            Invocation.method(#fetch, []),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 
   @override
-  _i6.Future<void> refresh() => (super.noSuchMethod(
-        Invocation.method(
-          #refresh,
-          [],
-        ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
+  _i6.Future<void> refresh() =>
+      (super.noSuchMethod(
+            Invocation.method(#refresh, []),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 
   @override
   void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(
-          #addListener,
-          [listener],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#addListener, [listener]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(
-          #removeListener,
-          [listener],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#removeListener, [listener]),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void notifyListeners() => super.noSuchMethod(
-        Invocation.method(
-          #notifyListeners,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#notifyListeners, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void unsubscribeAll() => super.noSuchMethod(
-        Invocation.method(
-          #unsubscribeAll,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#unsubscribeAll, []),
+    returnValueForMissingStub: null,
+  );
 
   @override
   void subscribe(_i6.StreamSubscription<dynamic>? sub) => super.noSuchMethod(
-        Invocation.method(
-          #subscribe,
-          [sub],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#subscribe, [sub]),
+    returnValueForMissingStub: null,
+  );
 }

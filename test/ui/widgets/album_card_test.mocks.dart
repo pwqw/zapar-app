@@ -23,6 +23,7 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
+// ignore_for_file: invalid_use_of_internal_member
 
 /// A class which mocks [AppRouter].
 ///
@@ -38,14 +39,15 @@ class MockAppRouter extends _i1.Mock implements _i2.AppRouter {
     required dynamic albumId,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #gotoAlbumDetailsScreen,
-          [context],
-          {#albumId: albumId},
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(
+              #gotoAlbumDetailsScreen,
+              [context],
+              {#albumId: albumId},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> gotoArtistDetailsScreen(
@@ -53,69 +55,62 @@ class MockAppRouter extends _i1.Mock implements _i2.AppRouter {
     required dynamic artistId,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #gotoArtistDetailsScreen,
-          [context],
-          {#artistId: artistId},
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(
+              #gotoArtistDetailsScreen,
+              [context],
+              {#artistId: artistId},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   dynamic gotoPodcastDetailsScreen(
     _i4.BuildContext? context, {
     required String? podcastId,
-  }) =>
-      super.noSuchMethod(Invocation.method(
-        #gotoPodcastDetailsScreen,
-        [context],
-        {#podcastId: podcastId},
-      ));
+  }) => super.noSuchMethod(
+    Invocation.method(
+      #gotoPodcastDetailsScreen,
+      [context],
+      {#podcastId: podcastId},
+    ),
+  );
 
   @override
   dynamic gotoGenreDetailsScreen(
     _i4.BuildContext? context, {
     required _i5.Genre? genre,
-  }) =>
-      super.noSuchMethod(Invocation.method(
-        #gotoGenreDetailsScreen,
-        [context],
-        {#genre: genre},
-      ));
+  }) => super.noSuchMethod(
+    Invocation.method(#gotoGenreDetailsScreen, [context], {#genre: genre}),
+  );
 
   @override
   _i3.Future<void> openNowPlayingScreen(_i4.BuildContext? context) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #openNowPlayingScreen,
-          [context],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#openNowPlayingScreen, [context]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> showCreatePlaylistSheet(_i4.BuildContext? context) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #showCreatePlaylistSheet,
-          [context],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#showCreatePlaylistSheet, [context]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> showCreatePlaylistFolderSheet(_i4.BuildContext? context) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #showCreatePlaylistFolderSheet,
-          [context],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#showCreatePlaylistFolderSheet, [context]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> showPlayableActionSheet(
@@ -123,23 +118,22 @@ class MockAppRouter extends _i1.Mock implements _i2.AppRouter {
     required _i5.Playable<dynamic>? playable,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #showPlayableActionSheet,
-          [context],
-          {#playable: playable},
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(
+              #showPlayableActionSheet,
+              [context],
+              {#playable: playable},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> showAddPodcastSheet(_i4.BuildContext? context) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #showAddPodcastSheet,
-          [context],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#showAddPodcastSheet, [context]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

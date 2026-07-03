@@ -1,0 +1,86 @@
+name: Android Release Setup
+description: Flutter, Java, signing, and version metadata for Android releases
+
+inputs:
+  keystore_base64:
+    description: Base64-encoded upload keystore
+    required: true
+  keystore_password:
+    description: Keystore password
+    required: true
+  key_alias:
+    description: Signing key alias
+    required: true
+  key_password:
+    description: Signing key password
+    required: true
+
+outputs:
+  version_name:
+    description: Semantic version name from pubspec.yaml
+    value: ${{ steps.versioning.outputs.version_name }}
+  version_code:
+    description: Computed Android version code
+    value: ${{ steps.versioning.outputs.version_code }}
+
+runs:
+  using: composite
+  steps:
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.29.3'
+
+    - uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Setup signing
+      shell: bash
+      run: |
+        echo "${{ inputs.keystore_base64 }}" | base64 -d > android/app/upload-keystore.jks
+        cat > android/key.properties << EOF
+        storeFile=upload-keystore.jks
+        storePassword=${{ inputs.keystore_password }}
+        keyAlias=${{ inputs.key_alias }}
+        keyPassword=${{ inputs.key_password }}
+        EOF
+
+    - name: Compute Flutter version metadata
+      id: versioning
+      shell: bash
+      run: |
+        VERSION_LINE="$(python3 - <<'PY'
+        from pathlib import Path
+
+        for line in Path('pubspec.yaml').read_text().splitlines():
+            if line.startswith('version:'):
+                print(line.split(':', 1)[1].strip())
+                break
+        else:
+            raise SystemExit('Unable to locate version in pubspec.yaml')
+        PY
+        )"
+
+        VERSION_NAME="${VERSION_LINE%%+*}"
+        IFS='.' read -r MAJOR MINOR PATCH <<EOF
+        $VERSION_NAME
+        EOF
+
+        if (( 10#$MAJOR > 9 || 10#$MINOR > 99 || 10#$PATCH > 99 )); then
+          echo "Version segments must stay within 0-9 / 0-99 / 0-99: $VERSION_NAME" >&2
+          exit 1
+        fi
+
+        if (( 10#$GITHUB_RUN_NUMBER > 9999 )); then
+          echo "GITHUB_RUN_NUMBER exceeds reserved 4-digit build space: $GITHUB_RUN_NUMBER" >&2
+          exit 1
+        fi
+
+        SEMANTIC_CODE=$((10#$MAJOR * 100000000 + 10#$MINOR * 1000000 + 10#$PATCH * 10000))
+        BUILD_SEQUENCE=$((10#$GITHUB_RUN_NUMBER))
+
+        VERSION_CODE=$((SEMANTIC_CODE + BUILD_SEQUENCE))
+
+        echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+        echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"

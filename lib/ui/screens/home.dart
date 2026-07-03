@@ -54,6 +54,20 @@ class _HomeScreenState extends State<HomeScreen> {
         if (_errored) return OopsBox(onRetry: fetchData);
 
         final blocks = <Widget>[
+          if (overviewProvider.recentlyAddedSongs.isNotEmpty)
+            HorizontalCardScroller(
+              headingText: 'Recently added',
+              cards: <Widget>[
+                ...overviewProvider.recentlyAddedSongs
+                    .map((playable) => SongCard(playable: playable)),
+                PlaceholderCard(
+                  icon: CupertinoIcons.music_note,
+                  onPressed: () => Navigator.of(context).push(
+                    CupertinoPageRoute(builder: (_) => SongsScreen()),
+                  ),
+                ),
+              ],
+            ),
           if (overviewProvider.mostPlayedSongs.isNotEmpty)
             HorizontalCardScroller(
               headingText: 'Most played',
@@ -127,10 +141,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               IconButton(
                                 onPressed: () {
-                                  Navigator.of(
-                                    context,
-                                    rootNavigator: true,
-                                  ).pushNamed(RecentlyPlayedScreen.routeName);
+                                  Navigator.of(context).push(CupertinoPageRoute(
+                                    settings: const RouteSettings(
+                                      name: RecentlyPlayedScreen.routeName,
+                                    ),
+                                    builder: (_) =>
+                                        const RecentlyPlayedScreen(),
+                                  ));
                                 },
                                 icon: const Icon(CupertinoIcons.time, size: 23),
                               ),

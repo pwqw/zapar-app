@@ -137,7 +137,7 @@ class PlayingPlayableThumbnail extends StatelessWidget {
             dimension: double.infinity,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color(0xFF410928).withOpacity(.7),
+                color: Color(0xFF082814).withOpacity(.7),
               ),
             ),
           ),

@@ -5,13 +5,13 @@ class AppColors {
 
   static const black = const Color(0xFF181818);
   static const white = const Color(0xFFFFFFFF);
-  static const red = const Color(0xFFBB0054);
+  static const red = const Color(0xFFBF2043);
 
   static const text = Color.fromRGBO(255, 255, 255, .9);
   static const background = AppColors.black;
-  static const highlight = const Color(0xFFF80A95);
-  static const highlightAccent = const Color(0xFFC20C75);
+  static const highlight = const Color(0xFF19D163);
+  static const highlightAccent = const Color(0xFF14A84F);
 
   static const staticScreenHeaderBackground = Colors.transparent;
-  static const flexibleScreenHeaderBackground = Color.fromRGBO(25, 0, 64, .5);
+  static const flexibleScreenHeaderBackground = Color.fromRGBO(0, 30, 15, .5);
 }

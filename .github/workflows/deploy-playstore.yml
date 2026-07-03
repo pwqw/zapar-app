@@ -1,0 +1,93 @@
+name: Deploy to Play Store
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag (e.g. v35)
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy (for example v2.2.5)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  resolve_release_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release_tag.outputs.value }}
+    steps:
+      - name: Resolve release tag
+        id: release_tag
+        run: |
+          TAG='${{ inputs.tag }}'
+          if [ -z "$TAG" ]; then
+            TAG='${{ github.event.inputs.tag }}'
+          fi
+
+          case "$TAG" in
+            v*)
+              echo "value=$TAG" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Invalid release tag: $TAG" >&2
+              exit 1
+              ;;
+          esac
+
+  deploy_playstore:
+    needs: resolve_release_tag
+    runs-on: ubuntu-latest
+    environment: PlayStore
+    concurrency:
+      group: playstore-${{ needs.resolve_release_tag.outputs.tag }}
+      cancel-in-progress: false
+    steps:
+      - name: Download AAB artifact
+        if: github.event_name == 'workflow_call'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-aab
+          path: release-assets
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+
+      - name: Verify AAB artifact
+        if: github.event_name == 'workflow_call'
+        run: |
+          ls -laR release-assets/
+          if [ ! -f release-assets/app-release.aab ]; then
+            AAB="$(find release-assets -name 'app-release.aab' -print -quit)"
+            if [ -z "$AAB" ]; then
+              echo "AAB not found under release-assets/" >&2
+              exit 1
+            fi
+            cp "$AAB" release-assets/app-release.aab
+          fi
+          ls -lh release-assets/app-release.aab
+
+      - name: Download release bundle (manual)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download "${{ needs.resolve_release_tag.outputs.tag }}" \
+            --pattern 'app-release.aab' \
+            --dir release-assets
+
+      # internal = internal testing ("Prueba interna"). completed = release activo para testers internos.
+      - name: Upload to Play Store (internal testing — published)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: ${{ secrets.PACKAGE_NAME }}
+          releaseFiles: release-assets/app-release.aab
+          track: internal
+          status: completed

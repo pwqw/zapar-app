@@ -31,9 +31,11 @@
 .pub/
 /build/
 /ios/build/
+/linux/flutter/ephemeral/
+/macos/Flutter/ephemeral/
+/macos/Flutter/GeneratedPluginRegistrant.swift
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
@@ -52,3 +54,8 @@ app.*.map.json
 
 /android/key.properties
 
+# Fork: overrides locales (Makefile, Gradle); ver .env.example
+/.env
+
+screenshot_defines.json
+integration_test/screenshots/

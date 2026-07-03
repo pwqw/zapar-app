@@ -18,12 +18,13 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 2.2.5+34
 
 environment:
-  sdk: ">=2.17.0-0 <3.0.0"
+  sdk: '>=3.7.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -56,28 +57,33 @@ dependencies:
   lucide_icons: ^0.257.0
   timeago: ^3.6.1
   url_launcher: ^6.3.0
+  google_sign_in: ^6.3.0
 
   collection: any
   faker: any
   ulid: ^2.0.1
+  rxdart: any
+  flutter_cache_manager: any
+  file: any
+
 dev_dependencies:
   fake_async: ^1.2.0
-  mockito: ^5.0.12
+  mockito: ^5.6.4
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
-  rxdart: any
-  flutter_cache_manager: any
-  file: any
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # included with your application, so you can use the icons in the
+  # material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:

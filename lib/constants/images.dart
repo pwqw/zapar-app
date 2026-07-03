@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
+
+import 'package:app/utils/default_art_uri_io.dart'
+    if (dart.library.html) 'package:app/utils/default_art_uri_web.dart' as impl;
 
 class AppImages {
   AppImages._();
@@ -17,16 +16,10 @@ class AppImages {
   // audio_service doesn't directly support `asset://` URIs, so we need to
   // convert the asset to a file and use a `file://` URI instead.
   // See: https://github.com/ryanheise/audio_service/issues/523
+  // Web: no dart:io File — notification art URI is omitted.
   static Future<Uri?> getDefaultArtUri() async {
     if (_defaultArtUri == null) {
-      try {
-        final content = await rootBundle.load(defaultImageAssetName);
-        final bytes = content.buffer.asUint8List();
-        final documentDir = await getApplicationDocumentsDirectory();
-        final filePath = '${documentDir.path}/default-image.webp';
-
-        _defaultArtUri = (await File(filePath).writeAsBytes(bytes)).uri;
-      } catch (_) {}
+      _defaultArtUri = await impl.materializeDefaultArtUri(defaultImageAssetName);
     }
 
     return _defaultArtUri;
