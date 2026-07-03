@@ -9,72 +9,34 @@ permissions:
   contents: write
 
 jobs:
-  build_release:
+  build_aab:
     runs-on: ubuntu-latest
     environment: PlayStore
     steps:
       - uses: actions/checkout@v5
-      - uses: subosito/flutter-action@v2
+
+      - name: Setup Android release environment
+        id: setup
+        uses: ./.github/actions/android-release-setup
         with:
-          flutter-version: '3.29.3'
-      - uses: actions/setup-java@v5
+          keystore_base64: ${{ secrets.KEYSTORE_BASE64 }}
+          keystore_password: ${{ secrets.KEYSTORE_PASSWORD }}
+          key_alias: ${{ secrets.KEY_ALIAS }}
+          key_password: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Restore dependency cache
+        uses: actions/cache@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup signing
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
-          cat > android/key.properties << EOF
-          storeFile=upload-keystore.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          EOF
-
-      - name: Compute Flutter version metadata
-        id: versioning
-        run: |
-          VERSION_LINE="$(python3 - <<'PY'
-          from pathlib import Path
-
-          for line in Path('pubspec.yaml').read_text().splitlines():
-              if line.startswith('version:'):
-                  print(line.split(':', 1)[1].strip())
-                  break
-          else:
-              raise SystemExit('Unable to locate version in pubspec.yaml')
-          PY
-          )"
-
-          VERSION_NAME="${VERSION_LINE%%+*}"
-          IFS='.' read -r MAJOR MINOR PATCH <<EOF
-          $VERSION_NAME
-          EOF
-
-          if (( 10#$MAJOR > 9 || 10#$MINOR > 99 || 10#$PATCH > 99 )); then
-            echo "Version segments must stay within 0-9 / 0-99 / 0-99: $VERSION_NAME" >&2
-            exit 1
-          fi
-
-          if (( 10#$GITHUB_RUN_NUMBER > 9999 )); then
-            echo "GITHUB_RUN_NUMBER exceeds reserved 4-digit build space: $GITHUB_RUN_NUMBER" >&2
-            exit 1
-          fi
-
-          SEMANTIC_CODE=$((10#$MAJOR * 100000000 + 10#$MINOR * 1000000 + 10#$PATCH * 10000))
-          BUILD_SEQUENCE=$((10#$GITHUB_RUN_NUMBER))
-
-          VERSION_CODE=$((SEMANTIC_CODE + BUILD_SEQUENCE))
-
-          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          path: |
+            ~/.pub-cache
+            ~/.gradle/caches
+          key: android-deps-${{ hashFiles('pubspec.lock', 'android/**/*.gradle*') }}
 
       - name: Build AppBundle
         run: >
           flutter build appbundle --release
-          --build-name="${{ steps.versioning.outputs.version_name }}"
-          --build-number="${{ steps.versioning.outputs.version_code }}"
+          --build-name="${{ steps.setup.outputs.version_name }}"
+          --build-number="${{ steps.setup.outputs.version_code }}"
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
           --dart-define=KOEL_HOST=${{ secrets.KOEL_HOST }}
           -Ptarget-platform=android-arm,android-arm64
@@ -82,18 +44,62 @@ jobs:
           ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
           ORG_GRADLE_PROJECT_PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
 
-      - name: Create Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >
-          gh release create "${{ github.ref_name }}"
-          build/app/outputs/bundle/release/app-release.aab
-          --title "Release ${{ github.ref_name }}"
-          --verify-tag
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 1
 
   deploy_playstore:
-    needs: build_release
+    needs: build_aab
     uses: ./.github/workflows/deploy-playstore.yml
     with:
       tag: ${{ github.ref_name }}
     secrets: inherit
+
+  build_apk_and_release:
+    needs: deploy_playstore
+    runs-on: ubuntu-latest
+    environment: PlayStore
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Android release environment
+        id: setup
+        uses: ./.github/actions/android-release-setup
+        with:
+          keystore_base64: ${{ secrets.KEYSTORE_BASE64 }}
+          keystore_password: ${{ secrets.KEYSTORE_PASSWORD }}
+          key_alias: ${{ secrets.KEY_ALIAS }}
+          key_password: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Restore dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.gradle/caches
+          key: android-deps-${{ hashFiles('pubspec.lock', 'android/**/*.gradle*') }}
+
+      - name: Build APK
+        run: >
+          flutter build apk --release
+          --build-name="${{ steps.setup.outputs.version_name }}"
+          --build-number="${{ steps.setup.outputs.version_code }}"
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+          --dart-define=KOEL_HOST=${{ secrets.KOEL_HOST }}
+          -Ptarget-platform=android-arm,android-arm64
+        env:
+          ORG_GRADLE_PROJECT_APP_LABEL: ${{ secrets.APP_LABEL }}
+          ORG_GRADLE_PROJECT_PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: >
+          gh release create "${{ github.ref_name }}"
+          build/app/outputs/flutter-apk/app-release.apk
+          --title "Release ${{ github.ref_name }}"
+          --verify-tag
